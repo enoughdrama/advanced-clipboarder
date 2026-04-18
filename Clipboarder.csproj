@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <RootNamespace>Clipboarder</RootNamespace>
+    <AssemblyName>Clipboarder</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\Outfit-Regular.ttf"/>
+    <Resource Include="Fonts\Outfit-Medium.ttf"/>
+    <Resource Include="Fonts\Outfit-SemiBold.ttf"/>
+    <Resource Include="Fonts\Outfit-Bold.ttf"/>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,101 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Palette approximated from the original oklch design tokens. -->
+    <Color x:Key="Bg0Color">#FF0E0D12</Color>
+    <Color x:Key="Bg1Color">#FF17151D</Color>
+    <Color x:Key="Bg2Color">#FF1E1C26</Color>
+    <Color x:Key="Bg3Color">#FF25222E</Color>
+    <!-- 0xFA = 250/255 alpha per design spec -->
+    <Color x:Key="AppBgA">#FA1E1C26</Color>
+    <Color x:Key="AppBgB">#FA141218</Color>
+    <Color x:Key="DesktopBgColor">#FF050508</Color>
+
+    <Color x:Key="Fg0Color">#FFF4F1EA</Color>
+    <Color x:Key="Fg1Color">#FFC7C2B8</Color>
+    <Color x:Key="Fg2Color">#FF8B8578</Color>
+    <Color x:Key="Fg3Color">#FF5E5A51</Color>
+
+    <Color x:Key="LineColor">#0FFFFFFF</Color>
+    <Color x:Key="Line2Color">#1AFFFFFF</Color>
+
+    <Color x:Key="AccentColor">#FF9E7BF0</Color>
+    <Color x:Key="AccentSoftColor">#299E7BF0</Color>
+    <Color x:Key="AccentLineColor">#619E7BF0</Color>
+
+    <Color x:Key="WarnColor">#FFE5BC6B</Color>
+    <Color x:Key="OkColor">#FF7ACF87</Color>
+    <Color x:Key="DangerColor">#FFE57A6B</Color>
+
+    <Color x:Key="TypeTextColor">#FFD8CFB8</Color>
+    <Color x:Key="TypeEmailColor">#FF8FDCBB</Color>
+    <Color x:Key="TypeCodeColor">#FFA6B4F2</Color>
+    <Color x:Key="TypeLinkColor">#FF8FCDE8</Color>
+    <Color x:Key="TypeImgColor">#FFE8A77A</Color>
+    <Color x:Key="TypeColorTypeColor">#FFD98EDB</Color>
+    <Color x:Key="TypeFileColor">#FFCEC08F</Color>
+
+    <SolidColorBrush x:Key="DesktopBg"      Color="{StaticResource DesktopBgColor}"/>
+    <SolidColorBrush x:Key="Bg0"            Color="{StaticResource Bg0Color}"/>
+    <SolidColorBrush x:Key="Bg1"            Color="{StaticResource Bg1Color}"/>
+    <SolidColorBrush x:Key="Bg2"            Color="{StaticResource Bg2Color}"/>
+    <SolidColorBrush x:Key="Bg3"            Color="{StaticResource Bg3Color}"/>
+    <SolidColorBrush x:Key="Fg0"            Color="{StaticResource Fg0Color}"/>
+    <SolidColorBrush x:Key="Fg1"            Color="{StaticResource Fg1Color}"/>
+    <SolidColorBrush x:Key="Fg2"            Color="{StaticResource Fg2Color}"/>
+    <SolidColorBrush x:Key="Fg3"            Color="{StaticResource Fg3Color}"/>
+    <SolidColorBrush x:Key="Line"           Color="{StaticResource LineColor}"/>
+    <SolidColorBrush x:Key="Line2"          Color="{StaticResource Line2Color}"/>
+    <SolidColorBrush x:Key="Accent"         Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="AccentSoft"     Color="{StaticResource AccentSoftColor}"/>
+    <SolidColorBrush x:Key="AccentLine"     Color="{StaticResource AccentLineColor}"/>
+    <SolidColorBrush x:Key="Warn"           Color="{StaticResource WarnColor}"/>
+    <SolidColorBrush x:Key="Ok"             Color="{StaticResource OkColor}"/>
+    <SolidColorBrush x:Key="Danger"         Color="{StaticResource DangerColor}"/>
+
+    <SolidColorBrush x:Key="TypeTextBrush"  Color="{StaticResource TypeTextColor}"/>
+    <SolidColorBrush x:Key="TypeEmailBrush" Color="{StaticResource TypeEmailColor}"/>
+    <SolidColorBrush x:Key="TypeCodeBrush"  Color="{StaticResource TypeCodeColor}"/>
+    <SolidColorBrush x:Key="TypeLinkBrush"  Color="{StaticResource TypeLinkColor}"/>
+    <SolidColorBrush x:Key="TypeImgBrush"   Color="{StaticResource TypeImgColor}"/>
+    <SolidColorBrush x:Key="TypeColorBrush" Color="{StaticResource TypeColorTypeColor}"/>
+    <SolidColorBrush x:Key="TypeFileBrush"  Color="{StaticResource TypeFileColor}"/>
+
+    <SolidColorBrush x:Key="CardBg"         Color="#06FFFFFF"/>
+    <SolidColorBrush x:Key="CardBgHover"    Color="#0DFFFFFF"/>
+    <SolidColorBrush x:Key="SearchBg"       Color="#08FFFFFF"/>
+    <SolidColorBrush x:Key="SearchBgFocus"  Color="#0DFFFFFF"/>
+
+    <LinearGradientBrush x:Key="AppBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="{StaticResource AppBgA}"/>
+        <GradientStop Offset="1" Color="{StaticResource AppBgB}"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="SelectedCardBg" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0"   Color="{StaticResource AccentSoftColor}"/>
+        <GradientStop Offset="1"   Color="#05FFFFFF"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="RailActiveBg" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0"  Color="{StaticResource AccentSoftColor}"/>
+        <GradientStop Offset="0.8" Color="#00000000"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="CardActionsFade" StartPoint="1,0" EndPoint="0,0">
+        <GradientStop Offset="0"    Color="#F21E1C26"/>
+        <GradientStop Offset="0.65" Color="#F21E1C26"/>
+        <GradientStop Offset="1"    Color="#001E1C26"/>
+    </LinearGradientBrush>
+
+    <!-- Linear gradient approximates a radial glow; WPF RadialGradientBrush at window scale is expensive. -->
+    <LinearGradientBrush x:Key="DesktopBgBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0"   Color="#662A1E4A"/>
+        <GradientStop Offset="0.5" Color="#FF050508"/>
+        <GradientStop Offset="1"   Color="#55104040"/>
+    </LinearGradientBrush>
+
+    <!-- Outfit is embedded (Fonts/Outfit-*.ttf) so rendering doesn't depend on host-installed fonts. -->
+    <FontFamily x:Key="UiFont">pack://application:,,,/Fonts/#Outfit</FontFamily>
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, JetBrains Mono</FontFamily>
+
+</ResourceDictionary>

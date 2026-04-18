@@ -1,0 +1,755 @@
+<Window x:Class="Clipboarder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Clipboarder.ViewModels"
+        xmlns:conv="clr-namespace:Clipboarder.Converters"
+        xmlns:tmpl="clr-namespace:Clipboarder.Templates"
+        xmlns:m="clr-namespace:Clipboarder.Models"
+        Title="Clipboard"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        Width="920" Height="800" SnapsToDevicePixels="True"
+        UseLayoutRounding="True"
+        FontFamily="{StaticResource UiFont}"
+        FontWeight="Medium"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Grayscale"
+        TextOptions.TextHintingMode="Animated"
+        RenderOptions.BitmapScalingMode="HighQuality">
+
+    <Window.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:BoolToVisibilityConverter x:Key="InvBoolToVis" Invert="True"/>
+        <conv:NullToVisibilityConverter x:Key="NotNullToVis"/>
+        <conv:NullToVisibilityConverter x:Key="NullToVis" Invert="True"/>
+
+        <tmpl:CardTemplateSelector x:Key="CardBodySelector"
+            TextTemplate="{StaticResource CardBody_Text}"
+            EmailTemplate="{StaticResource CardBody_Email}"
+            CodeTemplate="{StaticResource CardBody_Code}"
+            LinkTemplate="{StaticResource CardBody_Link}"
+            ImageTemplate="{StaticResource CardBody_Image}"
+            ColorTemplate="{StaticResource CardBody_Color}"
+            FileTemplate="{StaticResource CardBody_File}"
+            BigTemplate="{StaticResource CardBody_Big}"/>
+
+        <Style x:Key="RailIconPath" TargetType="Path">
+            <Setter Property="Stroke" Value="{StaticResource Fg1}"/>
+            <Setter Property="StrokeThickness" Value="1.6"/>
+            <Setter Property="StrokeStartLineCap" Value="Round"/>
+            <Setter Property="StrokeEndLineCap" Value="Round"/>
+            <Setter Property="StrokeLineJoin" Value="Round"/>
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Stretch" Value="Uniform"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="GroupHeaderBlock" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Fg3}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        </Style>
+
+        <Style x:Key="ClipCardContainer" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,3"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Focusable" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="CardRoot"
+                                BorderThickness="1"
+                                CornerRadius="10" SnapsToDevicePixels="True"
+                                ClipToBounds="True"
+                                MouseLeftButtonUp="OnCardLeftClick"
+                                Cursor="Hand">
+                            <Border.Background>
+                                <SolidColorBrush Color="#06FFFFFF"/>
+                            </Border.Background>
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#0FFFFFFF"/>
+                            </Border.BorderBrush>
+                            <Grid>
+                                <Grid Margin="14,12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,6">
+                                        <Border DockPanel.Dock="Left" Margin="0,0,8,0"
+                                                Background="#0AFFFFFF" BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                                CornerRadius="4" Padding="6,2">
+                                            <TextBlock Text="{Binding TypeLabel}"
+                                                       Foreground="{Binding TypeColor}"
+                                                       FontFamily="{StaticResource MonoFont}"
+                                                       FontSize="10" FontWeight="SemiBold"/>
+                                        </Border>
+
+                                        <TextBlock DockPanel.Dock="Left"
+                                                   Text="{Binding Source}" Foreground="{StaticResource Fg1}"
+                                                   FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
+
+                                        <Border DockPanel.Dock="Left" Margin="8,0,0,0"
+                                                Background="#26E5BC6B" BorderBrush="#4DE5BC6B" BorderThickness="1"
+                                                CornerRadius="3" Padding="5,2" VerticalAlignment="Center"
+                                                Visibility="{Binding Tag, Converter={StaticResource NotNullToVis}}">
+                                            <TextBlock Text="{Binding Tag}"
+                                                       Foreground="{StaticResource Warn}"
+                                                       FontFamily="{StaticResource MonoFont}"
+                                                       FontSize="9" FontWeight="SemiBold"/>
+                                        </Border>
+
+                                        <Path DockPanel.Dock="Left" Margin="8,0,0,0"
+                                              Data="{StaticResource GeomPinFill}"
+                                              Fill="{StaticResource Accent}"
+                                              Width="11" Height="11" Stretch="Uniform"
+                                              VerticalAlignment="Center"
+                                              Visibility="{Binding Pinned, Converter={StaticResource BoolToVis}}"/>
+
+                                        <TextBlock DockPanel.Dock="Right"
+                                                   Text="{Binding TimeAgo}" Foreground="{StaticResource Fg3}"
+                                                   FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </DockPanel>
+
+                                    <ContentControl Grid.Row="1"
+                                                    Content="{Binding}"
+                                                    ContentTemplateSelector="{StaticResource CardBodySelector}"
+                                                    Margin="0,0,80,0"/>
+
+                                    <Border Grid.Row="0" Grid.RowSpan="2"
+                                            x:Name="Actions"
+                                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            Margin="0,-2,-2,0" Padding="22,2,2,2"
+                                            CornerRadius="8"
+                                            Background="{StaticResource CardActionsFade}"
+                                            Opacity="0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource IconButtonSmall}"
+                                                    Command="{Binding DataContext.PinCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Pin / Unpin">
+                                                <Path x:Name="PinIcon"
+                                                      Data="{StaticResource GeomPin}"
+                                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                      StrokeThickness="1.6"
+                                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                      Width="13" Height="13" Stretch="Uniform"/>
+                                            </Button>
+                                            <Button Style="{StaticResource IconButtonSmall}"
+                                                    Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Copy">
+                                                <Path Data="{StaticResource GeomCopy}"
+                                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                      StrokeThickness="1.6"
+                                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                      Width="13" Height="13" Stretch="Uniform"/>
+                                            </Button>
+                                            <Button Style="{StaticResource IconButtonDanger}"
+                                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Delete">
+                                                <Path Data="{StaticResource GeomTrash}"
+                                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                      StrokeThickness="1.6"
+                                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                      Width="13" Height="13" Stretch="Uniform"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Actions"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="1" Duration="0:0:0.18"/>
+                                            <ColorAnimation Storyboard.TargetName="CardRoot"
+                                                            Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                            To="#0DFFFFFF" Duration="0:0:0.18"/>
+                                            <ColorAnimation Storyboard.TargetName="CardRoot"
+                                                            Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                            To="#1AFFFFFF" Duration="0:0:0.18"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Actions"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="0" Duration="0:0:0.18"/>
+                                            <ColorAnimation Storyboard.TargetName="CardRoot"
+                                                            Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                            To="#06FFFFFF" Duration="0:0:0.22"/>
+                                            <ColorAnimation Storyboard.TargetName="CardRoot"
+                                                            Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                                            To="#0FFFFFFF" Duration="0:0:0.22"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsFresh}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ColorAnimation Storyboard.TargetName="CardRoot"
+                                                            Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                            From="#387ACF87" To="#06FFFFFF" Duration="0:0:0.6"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GroupContainer" TargetType="GroupItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupItem">
+                        <StackPanel>
+                            <DockPanel Margin="6,14,6,6" LastChildFill="True">
+                                <Path DockPanel.Dock="Left" Data="{StaticResource GeomClock}"
+                                      Stroke="{StaticResource Fg3}" StrokeThickness="1.4"
+                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      Width="11" Height="11" Stretch="Uniform" Margin="0,0,8,0"/>
+                                <TextBlock DockPanel.Dock="Left"
+                                           Text="{Binding Name}"
+                                           Style="{StaticResource GroupHeaderBlock}">
+                                    <TextBlock.LayoutTransform>
+                                        <ScaleTransform/>
+                                    </TextBlock.LayoutTransform>
+                                </TextBlock>
+                                <TextBlock DockPanel.Dock="Right"
+                                           Text="{Binding ItemCount}"
+                                           Foreground="{StaticResource Fg3}"
+                                           FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                           VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                <Border Height="1" Background="{StaticResource Line}" Margin="10,0,10,0"/>
+                            </DockPanel>
+                            <ItemsPresenter/>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="41*"/>
+            <RowDefinition Height="119*"/>
+        </Grid.RowDefinitions>
+        <Border x:Name="AppPanel"
+                Width="720" MaxWidth="720" Height="620" MaxHeight="620"
+                HorizontalAlignment="Center" VerticalAlignment="Top"
+                CornerRadius="18"
+                Background="{StaticResource AppBg}"
+                BorderBrush="{StaticResource Line2}" BorderThickness="1"
+                SnapsToDevicePixels="True" Margin="0,90,0,0" Grid.RowSpan="2">
+            <Border.Clip>
+                <RectangleGeometry Rect="0,0,720,620" RadiusX="18" RadiusY="18"/>
+            </Border.Clip>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="6" Direction="270"
+                                  Color="Black" Opacity="0.55"/>
+            </Border.Effect>
+            <Border.RenderTransform>
+                <TransformGroup>
+                    <TranslateTransform Y="10"/>
+                    <ScaleTransform ScaleX="0.98" ScaleY="0.98" CenterX="360" CenterY="310"/>
+                </TransformGroup>
+            </Border.RenderTransform>
+            <Border.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(TranslateTransform.Y)"
+                                             From="10" To="0" Duration="0:0:0.35">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut"/>
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleX)"
+                                             From="0.98" To="1" Duration="0:0:0.35"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleY)"
+                                             From="0.98" To="1" Duration="0:0:0.35"/>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                             From="0" To="1" Duration="0:0:0.25"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Border.Triggers>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="14.102"/>
+                    <ColumnDefinition Width="173.898"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0"
+                        MouseLeftButtonDown="OnDragTopbar" Grid.ColumnSpan="2">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0" Color="#0AFFFFFF"/>
+                            <GradientStop Offset="1" Color="#00000000"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <DockPanel Margin="10,16,10,10" LastChildFill="True" Background="Transparent">
+                        <TextBlock DockPanel.Dock="Top"
+                                   Text="CATEGORIES"
+                                   Foreground="{StaticResource Fg3}"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   Margin="10,12,10,6"
+                                   Typography.Capitals="AllSmallCaps"/>
+
+                        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                            <TextBlock Text="QUICK"
+                                       Foreground="{StaticResource Fg3}"
+                                       FontSize="10" FontWeight="SemiBold"
+                                       Margin="10,0,10,6"/>
+                            <Border x:Name="BtnHistory" CornerRadius="8" Padding="10,7"
+                                    Background="#01000000" Cursor="Hand"
+                                    MouseLeftButtonDown="OnHistoryClick">
+                                <DockPanel Background="#01000000">
+                                    <Path DockPanel.Dock="Left"
+                                          Data="{StaticResource GeomClock}"
+                                          Stroke="{StaticResource Fg1}" StrokeThickness="1.6"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Width="16" Height="16" Stretch="Uniform"
+                                          Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding TotalCount, Mode=OneWay}" DockPanel.Dock="Right"
+                                               Foreground="{StaticResource Fg3}"
+                                               FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="History" VerticalAlignment="Center" Foreground="{StaticResource Fg1}" FontSize="13"/>
+                                </DockPanel>
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#0AFFFFFF"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                        </StackPanel>
+
+                        <ListBox x:Name="RailList"
+                                 ItemsSource="{Binding Categories}"
+                                 SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 Focusable="False">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,1"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Fg1}"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Grid>
+                                                    <Rectangle x:Name="stripe" Width="2" HorizontalAlignment="Left"
+                                                               Fill="{StaticResource Accent}" RadiusX="2" RadiusY="2"
+                                                               Margin="0,8" Opacity="0"
+                                                               RenderTransformOrigin="0,0.5">
+                                                        <Rectangle.RenderTransform>
+                                                            <ScaleTransform ScaleY="0.4"/>
+                                                        </Rectangle.RenderTransform>
+                                                    </Rectangle>
+                                                    <Border x:Name="bd"
+                                                            CornerRadius="8" Padding="10,7" BorderThickness="0">
+                                                        <Border.Background>
+                                                            <SolidColorBrush Color="#00FFFFFF"/>
+                                                        </Border.Background>
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Trigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <ColorAnimation Storyboard.TargetName="bd"
+                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                        To="#0FFFFFFF" Duration="0:0:0.15"/>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.EnterActions>
+                                                        <Trigger.ExitActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <ColorAnimation Storyboard.TargetName="bd"
+                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                        To="#00FFFFFF" Duration="0:0:0.2"/>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.ExitActions>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Trigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <ColorAnimation Storyboard.TargetName="bd"
+                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                        To="#299E7BF0" Duration="0:0:0.22"/>
+                                                                    <DoubleAnimation Storyboard.TargetName="stripe"
+                                                                        Storyboard.TargetProperty="Opacity"
+                                                                        To="1" Duration="0:0:0.22"/>
+                                                                    <DoubleAnimation Storyboard.TargetName="stripe"
+                                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                        To="1" Duration="0:0:0.28">
+                                                                        <DoubleAnimation.EasingFunction>
+                                                                            <BackEase EasingMode="EaseOut" Amplitude="0.5"/>
+                                                                        </DoubleAnimation.EasingFunction>
+                                                                    </DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.EnterActions>
+                                                        <Trigger.ExitActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard>
+                                                                    <ColorAnimation Storyboard.TargetName="bd"
+                                                                        Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                                                        To="#00FFFFFF" Duration="0:0:0.22"/>
+                                                                    <DoubleAnimation Storyboard.TargetName="stripe"
+                                                                        Storyboard.TargetProperty="Opacity"
+                                                                        To="0" Duration="0:0:0.18"/>
+                                                                    <DoubleAnimation Storyboard.TargetName="stripe"
+                                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                        To="0.4" Duration="0:0:0.18"/>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.ExitActions>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <Path DockPanel.Dock="Left"
+                                              x:Name="railIcon"
+                                              Width="16" Height="16"
+                                              Margin="0,0,10,0" Stretch="Uniform"
+                                              VerticalAlignment="Center"
+                                              Stroke="{StaticResource Fg1}" StrokeThickness="1.6"
+                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round">
+                                            <Path.Style>
+                                                <Style TargetType="Path">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconAll">
+                                                            <Setter Property="Data" Value="{StaticResource GeomAll}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconPin">
+                                                            <Setter Property="Data" Value="{StaticResource GeomPin}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconText">
+                                                            <Setter Property="Data" Value="{StaticResource GeomText}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconCode">
+                                                            <Setter Property="Data" Value="{StaticResource GeomCode}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconLink">
+                                                            <Setter Property="Data" Value="{StaticResource GeomLink}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconImage">
+                                                            <Setter Property="Data" Value="{StaticResource GeomImage}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconColor">
+                                                            <Setter Property="Data" Value="{StaticResource GeomColor}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IconKey}" Value="IconFile">
+                                                            <Setter Property="Data" Value="{StaticResource GeomFile}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Path.Style>
+                                        </Path>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Count}"
+                                                   Foreground="{StaticResource Fg3}"
+                                                   FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                                   Width="22"
+                                                   TextAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center" FontSize="13"/>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1"
+                            Background="Transparent"
+                            MouseLeftButtonDown="OnDragTopbar">
+                        <DockPanel Margin="14,12" Background="Transparent">
+                            <!-- Height locked so the row doesn't pulse when the Clear button
+                                 (22px) replaces the smaller '/' hint on input. -->
+                            <Border x:Name="SearchHost" CornerRadius="10" Padding="10,0" BorderThickness="1"
+                                    Height="36"
+                                    IsKeyboardFocusWithinChanged="OnSearchFocusChanged">
+                                <Border.Background>
+                                    <SolidColorBrush Color="#14FFFFFF"/>
+                                </Border.Background>
+                                <Border.BorderBrush>
+                                    <SolidColorBrush Color="#0FFFFFFF"/>
+                                </Border.BorderBrush>
+                                <DockPanel>
+                                    <Path DockPanel.Dock="Left" Data="{StaticResource GeomSearch}"
+                                          Stroke="{StaticResource Fg3}" StrokeThickness="1.6"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Width="14" Height="14" Stretch="Uniform"
+                                          Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+                                    <Button DockPanel.Dock="Right"
+                                            Style="{StaticResource IconButton}"
+                                            Width="22" Height="22"
+                                            Command="{Binding ClearSearchCommand}"
+                                            Visibility="{Binding Query, Converter={StaticResource NotNullToVis}}">
+                                        <Path Data="{StaticResource GeomX}"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                              StrokeThickness="1.6"
+                                              Width="10" Height="10" Stretch="Uniform"/>
+                                    </Button>
+
+                                    <Border DockPanel.Dock="Right"
+                                            Padding="5,1" CornerRadius="4"
+                                            Background="#0AFFFFFF" BorderBrush="{StaticResource Line2}" BorderThickness="1"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding Query, Converter={StaticResource NullToVis}}">
+                                        <TextBlock Text="/"
+                                                   Foreground="{StaticResource Fg2}"
+                                                   FontFamily="{StaticResource MonoFont}" FontSize="10"/>
+                                    </Border>
+
+                                    <Grid>
+                                        <TextBox x:Name="SearchBox"
+                                                 Style="{StaticResource SearchBox}"
+                                                 Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
+                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Text="Search clipboard · paste type, source, content…"
+                                                   Foreground="{StaticResource Fg3}"
+                                                   FontSize="13" IsHitTestVisible="False"
+                                                   VerticalAlignment="Center" Margin="2,0,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Query}" Value="">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </DockPanel>
+                            </Border>
+                        </DockPanel>
+                    </Border>
+
+                    <DockPanel Grid.Row="1" Margin="14,10,14,6">
+                        <TextBlock DockPanel.Dock="Right"
+                                   Foreground="{StaticResource Fg3}"
+                                   FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                   VerticalAlignment="Center">
+                            <Run Text="{Binding PinnedCount, Mode=OneWay}"/>
+                            <Run Text=" pinned · "/>
+                            <Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                            <Run Text=" total"/>
+                        </TextBlock>
+
+                        <Button DockPanel.Dock="Left"
+                                Click="OnClearCategoryClick"
+                                Tag="{Binding SelectedCategory}"
+                                ToolTip="Clear all entries in this category"
+                                Height="24" Padding="8,0"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Background="Transparent" BorderThickness="1"
+                                Cursor="Hand" Focusable="False">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" CornerRadius="6"
+                                                        Background="#0AFFFFFF"
+                                                        BorderBrush="{StaticResource Line2}"
+                                                        BorderThickness="1"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Path x:Name="ic" Data="{StaticResource GeomTrash}"
+                                                              Stroke="{StaticResource Fg3}" StrokeThickness="1.6"
+                                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                              Width="11" Height="11" Stretch="Uniform"
+                                                              Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                        <TextBlock x:Name="tx"
+                                                                   Foreground="{StaticResource Fg3}"
+                                                                   FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                                                   VerticalAlignment="Center">
+                                                            <Run Text="Clear "/><Run Text="{Binding SelectedCategory.Label, Mode=OneWay}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#1FE57A6B"/>
+                                                        <Setter TargetName="ic" Property="Stroke" Value="{StaticResource Danger}"/>
+                                                        <Setter TargetName="tx" Property="Foreground" Value="{StaticResource Danger}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedCategory.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </DockPanel>
+
+                    <Grid Grid.Row="2">
+                        <!-- Cards aren't selectable: Focusable=False prevents visual highlight; clicks route through OnCardLeftClick.
+                             ListBox uses its built-in ScrollViewer (hidden bar, wheel still scrolls). No outer ScrollViewer. -->
+                        <ListBox x:Name="CardList"
+                                 ItemsSource="{Binding ItemsView}"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="14,6,12,16"
+                                 SelectionMode="Single"
+                                 Focusable="False"
+                                 IsTabStop="False"
+                                 ItemContainerStyle="{StaticResource ClipCardContainer}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                 KeyboardNavigation.DirectionalNavigation="Contained">
+                            <ListBox.GroupStyle>
+                                <GroupStyle ContainerStyle="{StaticResource GroupContainer}"/>
+                            </ListBox.GroupStyle>
+                        </ListBox>
+
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Margin="40">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding FilteredCount}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Path Data="{StaticResource GeomSearch}"
+                                  Stroke="{StaticResource Fg3}" StrokeThickness="1.6"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Width="22" Height="22" Stretch="Uniform" Margin="0,0,0,10"
+                                  HorizontalAlignment="Center"/>
+                            <TextBlock Text="No matches" Foreground="{StaticResource Fg1}"
+                                       FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                            <TextBlock Foreground="{StaticResource Fg3}" FontSize="12"
+                                       HorizontalAlignment="Center" TextAlignment="Center"
+                                       TextWrapping="Wrap" MaxWidth="260" LineHeight="18"
+                                       Text="Try a different search or switch category. Your clipboard history lives here — everything you copy is searchable."/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border x:Name="ToastHost"
+                HorizontalAlignment="Center" VerticalAlignment="Top"
+                Margin="0,80,0,0" CornerRadius="10" Padding="14,8"
+                Background="#F0141218" BorderBrush="{StaticResource Line2}" BorderThickness="1"
+                Opacity="0" IsHitTestVisible="False"
+                RenderTransformOrigin="0.5,1" Grid.Row="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="6" Color="Black" Opacity="0.5"/>
+            </Border.Effect>
+            <Border.RenderTransform>
+                <TranslateTransform Y="10"/>
+            </Border.RenderTransform>
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ToastVisible}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                                         To="0" Duration="0:0:0.24">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.18"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                                         To="10" Duration="0:0:0.2"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="6" Height="6" Fill="{StaticResource Ok}" Margin="0,0,8,0"
+                         VerticalAlignment="Center">
+                    <Ellipse.Effect>
+                        <BlurEffect Radius="1"/>
+                    </Ellipse.Effect>
+                </Ellipse>
+                <TextBlock Text="{Binding Toast}" Foreground="{StaticResource Fg0}" FontSize="12"/>
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</Window>

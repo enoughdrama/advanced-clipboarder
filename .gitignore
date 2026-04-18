@@ -1,0 +1,62 @@
+## ==== Build output ====
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+*.binlog
+
+## ==== Visual Studio / Rider ====
+.vs/
+.idea/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+*.ncrunch*
+_NCrunch_*/
+.localhistory/
+
+## ==== ReSharper / dotCover / NCover ====
+_ReSharper*/
+*.DotSettings.user
+*.ncrunchproject
+*.ncrunchsolution
+coverage/
+
+## ==== NuGet / Paket ====
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+## ==== Test results / publish ====
+[Tt]est[Rr]esult*/
+BenchmarkDotNet.Artifacts/
+publish/
+PublishProfiles/
+*.publish.xml
+
+## ==== OS / junk ====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## ==== Secrets / local ====
+*.local.json
+*.local.xml
+*.env
+.env
+.env.*
+secrets.json
+appsettings.Development.json
+
+## ==== Local tool caches ====
+.claude/
+.cursor/
+.aider*

@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Clipboarder — preview</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg0:#0E0D12; --bg1:#17151D; --bg2:#1E1C26; --bg3:#25222E;
+    --desk:#050508;
+    --fg0:#F4F1EA; --fg1:#C7C2B8; --fg2:#8B8578; --fg3:#5E5A51;
+    --line:rgba(255,255,255,.06); --line2:rgba(255,255,255,.10);
+    --accent:#9E7BF0; --accent-soft:rgba(158,123,240,.16); --accent-line:rgba(158,123,240,.38);
+    --warn:#E5BC6B; --ok:#7ACF87; --danger:#E57A6B;
+    --t-text:#D8CFB8; --t-email:#8FDCBB; --t-code:#A6B4F2;
+    --t-link:#8FCDE8; --t-img:#E8A77A; --t-color:#D98EDB; --t-file:#CEC08F;
+    --card:rgba(255,255,255,.024); --card-hov:rgba(255,255,255,.051);
+    --ease-emph:cubic-bezier(.2,.8,.2,1);
+    --ease-out:cubic-bezier(.2,.9,.3,1);
+    --ease-in:cubic-bezier(.4,0,1,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--desk);color:var(--fg0);font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"ss01","cv11"}
+
+  .stage{
+    position:relative;
+    width:100%;
+    max-width:1040px;
+    margin:0 auto;
+    aspect-ratio: 1040 / 720;
+    background:
+      radial-gradient(1200px 700px at 15% 0%, #2A1E4A 0%, transparent 55%),
+      radial-gradient(900px 600px at 100% 100%, #104040 0%, transparent 60%),
+      #050508;
+    border-radius:12px;
+    overflow:hidden;
+    user-select:none;
+  }
+  .stage::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      radial-gradient(rgba(0,0,0,.3) 1px, transparent 1px);
+    background-size: 3px 3px, 2px 2px;
+    background-position: 0 0, 1px 1px;
+    mix-blend-mode:overlay;opacity:.35;
+  }
+
+  /* ===== App window ===== */
+  .app{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:720px;height:620px;
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(30,28,38,.98) 0%, rgba(20,18,24,.98) 100%);
+    border:1px solid var(--line2);
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,.75),
+      0 10px 24px -6px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.04);
+    overflow:hidden;
+    display:grid;
+    grid-template-columns:188px 1fr;
+    font-size:13px;
+    animation: appEnter 12s var(--ease-emph) infinite;
+  }
+  @keyframes appEnter{
+    0%   { opacity:0; transform:translate(-50%,calc(-50% + 10px)) scale(.985); }
+    3%   { opacity:1; transform:translate(-50%,-50%) scale(1); }
+    97%  { opacity:1; transform:translate(-50%,-50%) scale(1); }
+    100% { opacity:0; transform:translate(-50%,calc(-50% + 10px)) scale(.985); }
+  }
+
+  /* ===== Sidebar ===== */
+  .rail{
+    border-right:1px solid var(--line);
+    padding:16px 10px 12px;
+    background:linear-gradient(180deg, rgba(255,255,255,.04) 0%, transparent 80%);
+    display:flex;flex-direction:column;gap:2px;min-height:0;
+  }
+  .rail-h{
+    color:var(--fg3);font-size:10px;font-weight:600;letter-spacing:.06em;
+    padding:6px 10px 6px;text-transform:uppercase;
+  }
+  .rail-item{
+    display:flex;align-items:center;gap:10px;
+    padding:7px 10px;border-radius:8px;color:var(--fg1);
+    position:relative;cursor:pointer;
+  }
+  .rail-item svg{width:16px;height:16px;flex:0 0 16px;stroke:var(--fg1);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;fill:none}
+  .rail-item .cnt{margin-left:auto;color:var(--fg3);font:600 10px/1 "JetBrains Mono",monospace;min-width:20px;text-align:right}
+  .rail-item .stripe{
+    position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;
+    background:var(--accent);opacity:0;transform:scaleY(.4);transform-origin:center;
+  }
+  .rail-item.sel{background:linear-gradient(90deg, var(--accent-soft) 0%, transparent 80%)}
+  .rail-item.sel .stripe{opacity:1;transform:scaleY(1)}
+
+  .rail-bottom{margin-top:auto;display:flex;flex-direction:column;gap:4px}
+  .rail-bottom .rail-h{margin-top:10px}
+
+  /* ===== Main ===== */
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .search{
+    height:36px;border-radius:10px;
+    background:rgba(255,255,255,.078);
+    border:1px solid rgba(255,255,255,.06);
+    display:flex;align-items:center;gap:10px;padding:0 10px;
+  }
+  .search svg{width:14px;height:14px;stroke:var(--fg3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:0 0 14px}
+  .search .ph{flex:1;min-width:0;font-size:13px;color:var(--fg3);white-space:nowrap;overflow:hidden}
+  .search .kbd{
+    font:600 10px/1 "JetBrains Mono",monospace;color:var(--fg2);
+    padding:4px 6px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid var(--line2);
+  }
+
+  /* Statusbar */
+  .statusbar{display:flex;align-items:center;padding:10px 14px 6px;gap:12px;font:500 11px/1 "JetBrains Mono",monospace;color:var(--fg3)}
+  .clear-btn{
+    height:24px;padding:0 10px;border-radius:6px;border:1px solid var(--line2);background:rgba(255,255,255,.04);
+    display:inline-flex;align-items:center;gap:6px;color:var(--fg3);cursor:pointer;
+  }
+  .clear-btn svg{width:11px;height:11px;stroke:var(--fg3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .counters{margin-left:auto}
+  .counters b{color:var(--fg1);font-weight:600}
+
+  /* ===== List ===== */
+  .list{
+    flex:1;min-height:0;overflow:hidden;
+    padding:6px 12px 16px 14px;position:relative;
+  }
+  .list::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:40px;pointer-events:none;
+    background:linear-gradient(180deg, transparent 0%, rgba(20,18,24,.96) 90%);
+  }
+  .grp-h{
+    display:flex;align-items:center;gap:8px;margin:12px 6px 4px;color:var(--fg3);
+    font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  }
+  .grp-h:first-child{margin-top:6px}
+  .grp-h svg{width:11px;height:11px;stroke:var(--fg3);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .grp-h .ln{flex:1;height:1px;background:var(--line);margin:0 4px}
+  .grp-h .n{font:600 10px/1 "JetBrains Mono",monospace;color:var(--fg3)}
+
+  .card{
+    border:1px solid var(--line);background:var(--card);
+    border-radius:10px;padding:11px 14px;margin:5px 0;position:relative;cursor:pointer;
+    transition:background .18s var(--ease-out), border-color .18s var(--ease-out);
+  }
+  .card .hd{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .card .type{
+    padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    font:600 10px/1.5 "JetBrains Mono",monospace;letter-spacing:.04em;
+  }
+  .card .src{color:var(--fg1);font-size:11px;font-weight:500}
+  .card .tag{
+    padding:1px 5px;border-radius:3px;background:rgba(229,188,107,.15);
+    border:1px solid rgba(229,188,107,.30);color:var(--warn);
+    font:600 9px/1.5 "JetBrains Mono",monospace;
+  }
+  .card .pin{width:11px;height:11px;fill:var(--accent)}
+  .card .when{margin-left:auto;color:var(--fg3);font:500 11px/1 "JetBrains Mono",monospace}
+  .card .bd{min-height:16px;overflow:hidden}
+
+  .t-text{color:var(--t-text)}.t-email{color:var(--t-email)}
+  .t-code{color:var(--t-code)}.t-link{color:var(--t-link)}
+  .t-img{color:var(--t-img)}.t-color{color:var(--t-color)}.t-file{color:var(--t-file)}
+
+  .body-text{color:var(--fg0);font-size:13px;line-height:19px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .body-email{color:var(--t-email);font:400 12px/1.4 "JetBrains Mono",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .body-link{color:var(--t-link);font-size:12px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .body-code{
+    background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:6px;
+    padding:8px 10px;margin:0;
+    font:400 11px/1.5 "JetBrains Mono",monospace;color:var(--fg0);
+    white-space:pre;overflow:hidden;max-height:66px;
+  }
+  .body-code .kw{color:#C8A2FF}.body-code .fn{color:#8FCDE8}.body-code .num{color:#E8A77A}.body-code .pn{color:var(--fg2)}
+  .body-color{display:flex;align-items:center;gap:10px}
+  .body-color .sw{width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.16);flex:0 0 36px}
+  .body-color .hex{color:var(--fg0);font:600 13px/1.2 "JetBrains Mono",monospace}
+  .body-color .palette{display:flex;gap:5px;margin-top:4px}
+  .body-color .palette i{width:14px;height:14px;border-radius:4px;display:block;border:1px solid rgba(255,255,255,.1)}
+  .body-big{color:var(--fg0);font:600 19px/1.2 "JetBrains Mono",monospace;letter-spacing:.08em}
+
+  /* Action buttons */
+  .card .actions{
+    position:absolute;right:6px;top:6px;display:flex;gap:2px;opacity:0;
+    padding:2px 2px 2px 20px;border-radius:8px;
+    background:linear-gradient(270deg, rgba(30,28,38,.96) 0%, rgba(30,28,38,.96) 65%, transparent 100%);
+    pointer-events:none;
+  }
+  .card .actions button{
+    width:24px;height:24px;border-radius:6px;border:1px solid transparent;
+    background:transparent;display:grid;place-items:center;cursor:pointer;color:var(--fg2);
+  }
+  .card .actions svg{width:12px;height:12px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ==== ANIMATIONS ==== */
+  /* Card entrance — staggered */
+  .card, .grp-h{ opacity:0; transform:translateY(6px); animation: slideIn .45s var(--ease-emph) forwards; }
+  .card{ animation-delay: calc(.25s + var(--i, 0) * .05s); }
+  .grp-h{ animation-delay: calc(.20s + var(--i, 0) * .05s); }
+  @keyframes slideIn{ to{ opacity:1; transform:translateY(0);} }
+
+  /* IsFresh green flash — Card #1 real feature from MainWindow.xaml:207-217 */
+  .card.fresh{ animation: slideIn .45s var(--ease-emph) forwards, freshFlash 12s var(--ease-out) infinite; }
+  @keyframes freshFlash{
+    0%,20%  { background:var(--card); border-color:var(--line);}
+    24%     { background:rgba(122,207,135,.22); border-color:rgba(122,207,135,.35);}
+    30%,100%{ background:var(--card); border-color:var(--line);}
+  }
+
+  /* Focus card hover (card #1) during phase 3 (50-70%) */
+  .card.focus{ animation: slideIn .45s var(--ease-emph) forwards, freshFlash 12s var(--ease-out) infinite, focusHover 12s var(--ease-out) infinite; }
+  @keyframes focusHover{
+    0%,48%   { background:var(--card); border-color:var(--line);}
+    52%,70%  { background:var(--card-hov); border-color:rgba(255,255,255,.12);}
+    72%,100% { background:var(--card); border-color:var(--line);}
+  }
+  .card.focus .actions{ animation: actionsShow 12s var(--ease-out) infinite; }
+  @keyframes actionsShow{
+    0%,50%   { opacity:0;}
+    54%,70%  { opacity:1;}
+    72%,100% { opacity:0;}
+  }
+  .card.focus .actions .copy{ animation: copyPress 12s var(--ease-emph) infinite; }
+  @keyframes copyPress{
+    0%,60%  { background:transparent; color:var(--fg2); transform:scale(1);}
+    62%     { background:rgba(158,123,240,.22); color:var(--fg0); transform:scale(.92);}
+    66%     { background:rgba(158,123,240,.12); color:var(--fg0); transform:scale(1);}
+    72%,100%{ background:transparent; color:var(--fg2); transform:scale(1);}
+  }
+
+  /* Toast slide-up + auto-fade */
+  .toast{
+    position:absolute;left:50%;top:90px;transform:translate(-50%, 10px);
+    padding:9px 14px;border-radius:10px;
+    background:rgba(20,18,24,.95);border:1px solid var(--line2);
+    color:var(--fg0);font-size:12px;
+    display:inline-flex;align-items:center;gap:8px;
+    box-shadow:0 14px 28px -8px rgba(0,0,0,.6);
+    opacity:0;pointer-events:none;white-space:nowrap;
+    animation: toastShow 12s var(--ease-emph) infinite;
+    z-index:15;
+  }
+  .toast .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px rgba(122,207,135,.8)}
+  @keyframes toastShow{
+    0%,62%   { opacity:0; transform:translate(-50%, 10px);}
+    64%      { opacity:1; transform:translate(-50%, 0);}
+    82%      { opacity:1; transform:translate(-50%, 0);}
+    86%,100% { opacity:0; transform:translate(-50%, 10px);}
+  }
+
+  /* Cursor — coords are % of .app (720×620). Key targets:
+       rest   (55%, 78%)  below visible cards
+       fresh  (55%, 28%)  center of #7C5CFF HEX card
+       TS     (48%, 50%)  center of TS code card
+       copy   (92%, 44%)  copy action button on TS card hover                */
+  .cursor{
+    position:absolute;width:22px;height:22px;pointer-events:none;z-index:30;
+    left:55%;top:78%;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.55));
+    animation: cursorMove 12s var(--ease-emph) infinite;
+  }
+  .cursor svg{width:100%;height:100%}
+  @keyframes cursorMove{
+    /* Phase 1: idle at rest (0-14%) */
+    0%,14%   { left:55%; top:78%; }
+    /* Phase 2: travel up to the fresh HEX card during the green flash */
+    22%      { left:55%; top:28%; }
+    32%      { left:55%; top:28%; }
+    /* Phase 3: travel down to the TS code card, dwell through hover + actions fade-in */
+    46%,58%  { left:48%; top:50%; }
+    /* Phase 4: slide right to the Copy button (dwell around the click at 62-66%) */
+    62%,68%  { left:92%; top:44%; }
+    /* Phase 5: small drift while toast is visible */
+    78%      { left:85%; top:48%; }
+    /* Phase 6: return to rest */
+    94%,100% { left:55%; top:78%; }
+  }
+  .cursor .ring{
+    position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--accent);
+    opacity:0;transform:scale(.6);
+    animation: clickRing 12s var(--ease-emph) infinite;
+  }
+  @keyframes clickRing{
+    0%,61%  { opacity:0; transform:scale(.6);}
+    62%     { opacity:.9; transform:scale(.6);}
+    68%     { opacity:0; transform:scale(2.2);}
+    100%    { opacity:0; transform:scale(.6);}
+  }
+  /* Small hint label under cursor, shown only during the copy interaction */
+  .cursor .hint{
+    position:absolute;left:18px;top:18px;white-space:nowrap;
+    padding:3px 7px;border-radius:5px;
+    background:rgba(158,123,240,.92);color:#0E0D12;
+    font:600 10px/1.2 "JetBrains Mono",monospace;letter-spacing:.04em;
+    opacity:0; transform:translateY(-2px);
+    animation: hintShow 12s var(--ease-out) infinite;
+  }
+  @keyframes hintShow{
+    0%,58%   { opacity:0; transform:translateY(-2px);}
+    61%,70%  { opacity:1; transform:translateY(0);}
+    72%,100% { opacity:0; transform:translateY(-2px);}
+  }
+
+  /* Top scrub bar */
+  .scrub{
+    position:absolute;left:0;right:0;top:0;height:3px;background:rgba(255,255,255,.04);
+    z-index:20;overflow:hidden;
+  }
+  .scrub::before{
+    content:"";display:block;height:100%;width:0%;
+    background:linear-gradient(90deg, var(--accent) 0%, #5CE1E6 100%);
+    animation: scrub 12s linear infinite;
+  }
+  @keyframes scrub{0%{width:0%}100%{width:100%}}
+
+  .chrome{
+    position:absolute;left:0;right:0;top:3px;height:24px;display:flex;align-items:center;
+    padding:0 10px;gap:6px;z-index:10;color:var(--fg3);font:500 11px/1 "Outfit",sans-serif;
+  }
+  .chrome .dot{width:9px;height:9px;border-radius:50%}
+  .chrome .dot.c1{background:#E57A6B}
+  .chrome .dot.c2{background:#E5BC6B}
+  .chrome .dot.c3{background:#7ACF87}
+  .chrome .ttl{margin-left:auto;opacity:.6;letter-spacing:.04em}
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation: none !important; transition: none !important; }
+    .card, .grp-h{ opacity:1; transform:none;}
+    .app{opacity:1; transform:translate(-50%,-50%)}
+  }
+
+  @media (max-width: 720px){
+    .stage{aspect-ratio: auto; height: 560px;}
+    .app{transform:translate(-50%,-50%) scale(.76); transform-origin:center}
+    @keyframes appEnter{
+      0%{opacity:0; transform:translate(-50%,calc(-50% + 8px)) scale(.745)}
+      3%,97%{opacity:1; transform:translate(-50%,-50%) scale(.76)}
+      100%{opacity:0; transform:translate(-50%,calc(-50% + 8px)) scale(.745)}
+    }
+  }
+</style>
+</head>
+<body>
+<div class="stage" role="img" aria-label="Clipboarder app demo: a new clip arrives, user hovers a card and copies it, a toast confirms">
+  <div class="scrub" aria-hidden="true"></div>
+  <div class="chrome" aria-hidden="true">
+    <span class="dot c1"></span><span class="dot c2"></span><span class="dot c3"></span>
+    <span class="ttl">Clipboarder · Clipboard</span>
+  </div>
+
+  <div class="app" aria-hidden="true">
+
+    <!-- Sidebar -->
+    <aside class="rail">
+      <div class="rail-h">Categories</div>
+
+      <div class="rail-item sel">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="2.2" rx="1"/><rect x="2" y="7" width="12" height="2.2" rx="1"/><rect x="2" y="11" width="12" height="2.2" rx="1"/></svg>
+        <span>All</span><span class="cnt">14</span>
+      </div>
+      <div class="rail-item">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><path d="M8 2 L10.5 4.5 L13 5 L9.5 8.5 L10 13 L8 11 L6 13 L6.5 8.5 L3 5 L5.5 4.5 Z"/></svg>
+        <span>Pinned</span><span class="cnt">2</span>
+      </div>
+      <div class="rail-item">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><path d="M3 4h10M8 4v9M5 13h6"/></svg>
+        <span>Text</span><span class="cnt">5</span>
+      </div>
+      <div class="rail-item">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><path d="M5 5 L2 8 L5 11 M11 5 L14 8 L11 11 M9 4 L7 12"/></svg>
+        <span>Code</span><span class="cnt">3</span>
+      </div>
+      <div class="rail-item">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><path d="M7 9a3 3 0 0 0 4 0l2-2a3 3 0 0 0-4-4L8 4M9 7a3 3 0 0 0-4 0L3 9a3 3 0 0 0 4 4l1-1"/></svg>
+        <span>Links</span><span class="cnt">2</span>
+      </div>
+      <div class="rail-item">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="7" r="1.4"/><path d="M3 12 L7 8 L10 11 L12 9 L13 10"/></svg>
+        <span>Images</span><span class="cnt">2</span>
+      </div>
+      <div class="rail-item">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><path d="M8 2 a6 6 0 1 0 0 12 c1.5 0 2-.8 2-1.6 0-1.4-1.4-1.2-1.4-2.4 0-1 1-1.2 2.4-1.2 C13 8.8 14 8 14 6.5 14 4 11.3 2 8 2z"/></svg>
+        <span>Colors</span><span class="cnt">1</span>
+      </div>
+      <div class="rail-item">
+        <span class="stripe"></span>
+        <svg viewBox="0 0 16 16"><path d="M4 2h5l3 3v9H4z M9 2v3h3"/></svg>
+        <span>Files</span><span class="cnt">1</span>
+      </div>
+
+      <div class="rail-bottom">
+        <div class="rail-h">Quick</div>
+        <div class="rail-item" style="background:rgba(255,255,255,.02)">
+          <span class="stripe"></span>
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/></svg>
+          <span>History</span><span class="cnt">14</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Search -->
+      <div class="topbar">
+        <label class="search">
+          <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M11 11 L14 14"/></svg>
+          <span class="ph">Search clipboard · paste type, source, content…</span>
+          <span class="kbd">/</span>
+        </label>
+      </div>
+
+      <!-- Status -->
+      <div class="statusbar">
+        <button class="clear-btn" type="button">
+          <svg viewBox="0 0 16 16"><path d="M3 5h10M6 5V3h4v2M5 5l1 9h4l1-9"/></svg>
+          Clear All
+        </button>
+        <span class="counters"><b>2</b> pinned · <b>14</b> total</span>
+      </div>
+
+      <!-- List -->
+      <div class="list">
+
+        <!-- Pinned -->
+        <div class="grp-h" style="--i:0">
+          <svg viewBox="0 0 16 16"><path d="M8 2 L10.5 4.5 L13 5 L9.5 8.5 L10 13 L8 11 L6 13 L6.5 8.5 L3 5 L5.5 4.5 Z"/></svg>
+          <span>Pinned</span><span class="ln"></span><span class="n">2</span>
+        </div>
+
+        <!-- NEW/FRESH card: Color #7C5CFF from Figma (matches Pinned, flashes green on arrive) -->
+        <div class="card fresh" style="--i:1">
+          <div class="hd">
+            <span class="type t-color">HEX</span>
+            <span class="src">Figma</span>
+            <svg class="pin" viewBox="0 0 16 16"><path d="M8 2 L10.5 4.5 L13 5 L9.5 8.5 L10 13 L8 11 L6 13 L6.5 8.5 L3 5 L5.5 4.5 Z"/></svg>
+            <span class="when">just now</span>
+          </div>
+          <div class="bd body-color">
+            <span class="sw" style="background:#7C5CFF"></span>
+            <div>
+              <div class="hex">#7C5CFF</div>
+              <div class="palette">
+                <i style="background:#7C5CFF"></i>
+                <i style="background:#5CE1E6"></i>
+                <i style="background:#FFB86A"></i>
+                <i style="background:#F06292"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last hour -->
+        <div class="grp-h" style="--i:2">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/></svg>
+          <span>Last hour</span><span class="ln"></span><span class="n">3</span>
+        </div>
+
+        <!-- FOCUS card: Code TS — user will hover + copy this -->
+        <div class="card focus" style="--i:3">
+          <div class="hd">
+            <span class="type t-code">TS</span>
+            <span class="src">VS Code</span>
+            <span class="when">2m ago</span>
+          </div>
+          <pre class="bd body-code"><span class="kw">const</span> <span class="fn">useDebounce</span> <span class="pn">=</span> (v, ms <span class="pn">=</span> <span class="num">200</span>) <span class="pn">=&gt;</span> {
+  <span class="kw">const</span> [x, setX] <span class="pn">=</span> <span class="fn">useState</span>(v);
+  <span class="fn">useEffect</span>(() <span class="pn">=&gt;</span> { <span class="kw">const</span> t <span class="pn">=</span> <span class="fn">setTimeout</span>(() <span class="pn">=&gt;</span> <span class="fn">setX</span>(v), ms);
+    <span class="kw">return</span> () <span class="pn">=&gt;</span> <span class="fn">clearTimeout</span>(t); }, [v, ms]);</pre>
+          <div class="actions">
+            <button aria-label="pin"><svg viewBox="0 0 16 16"><path d="M8 2 L10.5 4.5 L13 5 L9.5 8.5 L10 13 L8 11 L6 13 L6.5 8.5 L3 5 L5.5 4.5 Z"/></svg></button>
+            <button class="copy" aria-label="copy"><svg viewBox="0 0 16 16"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M5 10H3.5A1.5 1.5 0 0 1 2 8.5V3.5A1.5 1.5 0 0 1 3.5 2h5A1.5 1.5 0 0 1 10 3.5V5"/></svg></button>
+            <button class="danger" aria-label="delete"><svg viewBox="0 0 16 16"><path d="M3 5h10M6 5V3h4v2M5 5l1 9h4l1-9"/></svg></button>
+          </div>
+        </div>
+
+        <!-- Link RFC 9110 -->
+        <div class="card" style="--i:4">
+          <div class="hd">
+            <span class="type t-link">URL</span>
+            <span class="src">Firefox</span>
+            <span class="when">7m ago</span>
+          </div>
+          <div class="bd body-link">https://datatracker.ietf.org/doc/html/rfc9110#name-http-semantics</div>
+        </div>
+
+        <!-- Text quarterly review -->
+        <div class="card" style="--i:5">
+          <div class="hd">
+            <span class="type t-text">TXT</span>
+            <span class="src">Mail</span>
+            <span class="when">28m ago</span>
+          </div>
+          <div class="bd body-text">Reminder: the quarterly review is moved to Thursday at 14:00 CET. Please confirm attendance in the calendar invite.</div>
+        </div>
+
+        <!-- Today -->
+        <div class="grp-h" style="--i:6">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/></svg>
+          <span>Today</span><span class="ln"></span><span class="n">5</span>
+        </div>
+
+        <!-- 2FA Big -->
+        <div class="card" style="--i:7">
+          <div class="hd">
+            <span class="type t-text">TXT</span>
+            <span class="src">Messages</span>
+            <span class="tag">2FA</span>
+            <span class="when">2h ago</span>
+          </div>
+          <div class="bd body-big">092 088</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast"><span class="dot"></span><span>Copied · TS</span></div>
+
+    <!-- Cursor -->
+    <div class="cursor" aria-hidden="true">
+      <svg viewBox="0 0 22 22">
+        <path d="M3 2 L3 18 L7 14 L10 20 L12 19 L9 13 L15 13 Z" fill="#F4F1EA" stroke="#0E0D12" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+      <span class="ring"></span>
+      <span class="hint">Copy</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
