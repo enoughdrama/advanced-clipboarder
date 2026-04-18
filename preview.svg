@@ -1,0 +1,465 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 720" width="1040" height="720" role="img" aria-label="Advanced Clipboarder demo: new clip arrives, cursor hovers a card and copies it, a toast confirms">
+<defs>
+  <linearGradient id="appBg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1E1C26"/><stop offset="1" stop-color="#141218"/>
+  </linearGradient>
+  <linearGradient id="railBg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".04"/>
+    <stop offset=".8" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="accentSoft" x1="0" x2="1" y1="0" y2="0">
+    <stop offset="0" stop-color="#9E7BF0" stop-opacity=".22"/>
+    <stop offset=".8" stop-color="#9E7BF0" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="scrubGrad" x1="0" x2="1" y1="0" y2="0">
+    <stop offset="0" stop-color="#9E7BF0"/>
+    <stop offset="1" stop-color="#5CE1E6"/>
+  </linearGradient>
+  <radialGradient id="glowA" cx=".15" cy="0" r=".6">
+    <stop offset="0" stop-color="#2A1E4A" stop-opacity=".6"/>
+    <stop offset="1" stop-color="#2A1E4A" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="glowB" cx="1" cy="1" r=".6">
+    <stop offset="0" stop-color="#104040" stop-opacity=".45"/>
+    <stop offset="1" stop-color="#104040" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="actionFade" x1="1" y1="0" x2="0" y2="0">
+    <stop offset="0" stop-color="#1E1C26" stop-opacity=".96"/>
+    <stop offset=".65" stop-color="#1E1C26" stop-opacity=".96"/>
+    <stop offset="1" stop-color="#1E1C26" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="listFade" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#141218" stop-opacity="0"/>
+    <stop offset="1" stop-color="#141218" stop-opacity=".96"/>
+  </linearGradient>
+  <clipPath id="appClip"><rect width="720" height="620" rx="18"/></clipPath>
+  <clipPath id="listClip"><rect x="0" y="0" width="518" height="510"/></clipPath>
+  <clipPath id="codeClip"><rect width="478" height="56" rx="6"/></clipPath>
+  <filter id="blur"><feGaussianBlur stdDeviation="16"/></filter>
+</defs>
+
+<style>
+  text{font-family:'Inter','Segoe UI','Helvetica Neue',system-ui,Arial,sans-serif;fill:#F4F1EA;font-size:13px;text-rendering:geometricPrecision}
+  .mono{font-family:'Cascadia Mono','Consolas','JetBrains Mono','SF Mono',Menlo,monospace}
+  .sem{font-weight:500}.bld{font-weight:600}
+  .fg0{fill:#F4F1EA}.fg1{fill:#C7C2B8}.fg2{fill:#8B8578}.fg3{fill:#5E5A51}
+  .tl{fill:#D8CFB8}.te{fill:#8FDCBB}.tc{fill:#A6B4F2}
+  .tk{fill:#8FCDE8}.tC{fill:#D98EDB}.tw{fill:#E5BC6B}
+  .ln{stroke:rgba(255,255,255,.06);stroke-width:1;fill:none}
+  .cbg{fill:rgba(255,255,255,.024);stroke:rgba(255,255,255,.06);stroke-width:1}
+  .icon{fill:none;stroke:#C7C2B8;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .ico-sm{fill:none;stroke:#5E5A51;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+
+  @keyframes scrub{0%{width:0}100%{width:1040px}}
+  .scrub-bar{animation:scrub 12s linear infinite}
+
+  @keyframes appIn{
+    0%{opacity:0;transform:translate(0,10px) scale(.985)}
+    3%{opacity:1;transform:translate(0,0) scale(1)}
+    97%{opacity:1;transform:translate(0,0) scale(1)}
+    100%{opacity:0;transform:translate(0,10px) scale(.985)}
+  }
+  .app-inner{animation:appIn 12s cubic-bezier(.2,.8,.2,1) infinite;transform-origin:360px 310px}
+
+  @keyframes slideIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+  .card,.grph{opacity:0;animation:slideIn .45s cubic-bezier(.2,.8,.2,1) forwards}
+  .s0{animation-delay:.20s}.s1{animation-delay:.25s}.s2{animation-delay:.30s}
+  .s3{animation-delay:.35s}.s4{animation-delay:.40s}.s5{animation-delay:.45s}
+  .s6{animation-delay:.50s}.s7{animation-delay:.55s}
+
+  @keyframes freshBg{0%,20%,30%,100%{fill:rgba(255,255,255,.024)}24%{fill:rgba(122,207,135,.22)}}
+  @keyframes freshSt{0%,20%,30%,100%{stroke:rgba(255,255,255,.06)}24%{stroke:rgba(122,207,135,.35)}}
+  .fresh .cbg{animation:freshBg 12s linear infinite,freshSt 12s linear infinite}
+
+  @keyframes focusBg{0%,48%,72%,100%{fill:rgba(255,255,255,.024)}52%,70%{fill:rgba(255,255,255,.051)}}
+  @keyframes focusSt{0%,48%,72%,100%{stroke:rgba(255,255,255,.06)}52%,70%{stroke:rgba(255,255,255,.12)}}
+  .focus .cbg{animation:focusBg 12s linear infinite,focusSt 12s linear infinite}
+
+  @keyframes actionsIn{0%,50%,72%,100%{opacity:0}54%,70%{opacity:1}}
+  .actions{opacity:0;animation:actionsIn 12s linear infinite}
+
+  @keyframes copyPress{0%,60%,72%,100%{fill:transparent}62%{fill:rgba(158,123,240,.22)}66%{fill:rgba(158,123,240,.12)}}
+  .copy-bg{animation:copyPress 12s linear infinite}
+
+  @keyframes toastShow{0%,62%,86%,100%{opacity:0;transform:translate(0,10px)}64%,82%{opacity:1;transform:translate(0,0)}}
+  .toast{opacity:0;animation:toastShow 12s cubic-bezier(.2,.8,.2,1) infinite}
+
+  @keyframes cursorMove{
+    0%{transform:translate(560px,520px)}14%{transform:translate(560px,520px)}
+    22%{transform:translate(600px,210px)}32%{transform:translate(600px,210px)}
+    46%{transform:translate(520px,332px)}58%{transform:translate(520px,332px)}
+    62%{transform:translate(788px,296px)}68%{transform:translate(788px,296px)}
+    78%{transform:translate(740px,316px)}
+    94%{transform:translate(560px,520px)}100%{transform:translate(560px,520px)}
+  }
+  .cursor-g{animation:cursorMove 12s cubic-bezier(.2,.8,.2,1) infinite}
+
+  @keyframes clickRing{0%,61%,100%{opacity:0;transform:scale(.6)}62%{opacity:.9;transform:scale(.6)}68%{opacity:0;transform:scale(2.2)}}
+  .click-ring{opacity:0;animation:clickRing 12s cubic-bezier(.2,.8,.2,1) infinite;transform-origin:10px 10px;transform-box:fill-box}
+
+  @keyframes hintShow{0%,58%,72%,100%{opacity:0}61%,70%{opacity:1}}
+  .hint{opacity:0;animation:hintShow 12s linear infinite}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+    .app-inner{opacity:1;transform:translate(0,0) scale(1)}
+    .card,.grph{opacity:1;transform:translateY(0)}
+  }
+</style>
+
+<rect width="1040" height="720" fill="#050508"/>
+<rect width="1040" height="720" fill="url(#glowA)" opacity=".7"/>
+<rect width="1040" height="720" fill="url(#glowB)" opacity=".6"/>
+
+<rect y="0" width="1040" height="3" fill="rgba(255,255,255,.04)"/>
+<rect class="scrub-bar" y="0" height="3" fill="url(#scrubGrad)" width="0"/>
+
+<g transform="translate(16,20)">
+  <circle cx="0" cy="0" r="4.5" fill="#E57A6B"/>
+  <circle cx="16" cy="0" r="4.5" fill="#E5BC6B"/>
+  <circle cx="32" cy="0" r="4.5" fill="#7ACF87"/>
+</g>
+<text x="1024" y="24" text-anchor="end" class="fg3" font-size="11" opacity=".6">Advanced Clipboarder · Clipboard</text>
+
+<g transform="translate(160,50)">
+<g class="app-inner">
+
+  <rect x="-6" y="16" width="732" height="632" rx="22" fill="#000" opacity=".55" filter="url(#blur)"/>
+
+  <rect width="720" height="620" rx="18" fill="url(#appBg)" stroke="rgba(255,255,255,.1)"/>
+
+  <g clip-path="url(#appClip)">
+
+    <!-- ============ SIDEBAR ============ -->
+    <rect width="188" height="620" fill="url(#railBg)"/>
+    <line x1="188" y1="0" x2="188" y2="620" class="ln"/>
+
+    <g transform="translate(10,16)">
+      <text x="10" y="14" class="fg3 bld" font-size="10" letter-spacing=".8">CATEGORIES</text>
+
+      <!-- All (selected) -->
+      <g transform="translate(0,26)">
+        <rect width="168" height="30" rx="8" fill="url(#accentSoft)"/>
+        <rect x="0" y="8" width="2" height="14" rx="1" fill="#9E7BF0"/>
+        <g transform="translate(10,9)" class="icon">
+          <rect x="2" y="3" width="12" height="2.2" rx="1" fill="#C7C2B8" stroke="none"/>
+          <rect x="2" y="7" width="12" height="2.2" rx="1" fill="#C7C2B8" stroke="none"/>
+          <rect x="2" y="11" width="12" height="2.2" rx="1" fill="#C7C2B8" stroke="none"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">All</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">14</text>
+      </g>
+
+      <!-- Pinned -->
+      <g transform="translate(0,60)">
+        <g transform="translate(10,9)">
+          <path class="icon" d="M8 2 L10.5 4.5 L13 5 L9.5 8.5 L10 13 L8 11 L6 13 L6.5 8.5 L3 5 L5.5 4.5 Z"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">Pinned</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">2</text>
+      </g>
+
+      <!-- Text -->
+      <g transform="translate(0,92)">
+        <g transform="translate(10,9)">
+          <path class="icon" d="M3 4 h10 M8 4 v9 M5 13 h6"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">Text</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">5</text>
+      </g>
+
+      <!-- Code -->
+      <g transform="translate(0,124)">
+        <g transform="translate(10,9)">
+          <path class="icon" d="M5 5 L2 8 L5 11 M11 5 L14 8 L11 11 M9 4 L7 12"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">Code</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">3</text>
+      </g>
+
+      <!-- Links -->
+      <g transform="translate(0,156)">
+        <g transform="translate(10,9)">
+          <path class="icon" d="M7 9 a3 3 0 0 0 4 0 l2 -2 a3 3 0 0 0 -4 -4 l-1 1 M9 7 a3 3 0 0 0 -4 0 l-2 2 a3 3 0 0 0 4 4 l1 -1"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">Links</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">2</text>
+      </g>
+
+      <!-- Images -->
+      <g transform="translate(0,188)">
+        <g transform="translate(10,9)">
+          <rect class="icon" x="2" y="3" width="12" height="10" rx="1.5"/>
+          <circle class="icon" cx="6" cy="7" r="1.4"/>
+          <path class="icon" d="M3 12 L7 8 L10 11 L12 9 L13 10"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">Images</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">2</text>
+      </g>
+
+      <!-- Colors -->
+      <g transform="translate(0,220)">
+        <g transform="translate(10,9)">
+          <path class="icon" d="M8 2 a6 6 0 1 0 0 12 c1.5 0 2 -.8 2 -1.6 0 -1.4 -1.4 -1.2 -1.4 -2.4 0 -1 1 -1.2 2.4 -1.2 C13 8.8 14 8 14 6.5 C14 4 11.3 2 8 2 z"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">Colors</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">1</text>
+      </g>
+
+      <!-- Files -->
+      <g transform="translate(0,252)">
+        <g transform="translate(10,9)">
+          <path class="icon" d="M4 2 h5 l3 3 v9 H4 z M9 2 v3 h3"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">Files</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">1</text>
+      </g>
+
+      <!-- Quick / History (bottom) -->
+      <text x="10" y="510" class="fg3 bld" font-size="10" letter-spacing=".8">QUICK</text>
+      <g transform="translate(0,520)">
+        <rect width="168" height="30" rx="8" fill="rgba(255,255,255,.02)"/>
+        <g transform="translate(10,9)">
+          <circle class="icon" cx="8" cy="8" r="6"/>
+          <path class="icon" d="M8 4 v4 l3 2"/>
+        </g>
+        <text x="36" y="19" class="fg1 sem">History</text>
+        <text x="158" y="19" class="fg3 mono bld" font-size="10" text-anchor="end">14</text>
+      </g>
+    </g>
+
+    <!-- ============ MAIN ============ -->
+    <g transform="translate(188,0)">
+
+      <!-- Search row -->
+      <g transform="translate(14,12)">
+        <rect width="504" height="36" rx="10" fill="rgba(255,255,255,.078)" stroke="rgba(255,255,255,.06)"/>
+        <g transform="translate(14,18)">
+          <circle class="ico-sm" cx="0" cy="0" r="4.5" stroke-width="1.6"/>
+          <line x1="3.5" y1="3.5" x2="6.5" y2="6.5" stroke="#5E5A51" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+        <text x="36" y="23" class="fg3">Search clipboard · paste type, source, content…</text>
+        <rect x="476" y="10" width="18" height="16" rx="4" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)"/>
+        <text x="485" y="21" class="fg2 mono bld" font-size="10" text-anchor="middle">/</text>
+      </g>
+      <line x1="0" y1="60" x2="532" y2="60" class="ln"/>
+
+      <!-- Status row -->
+      <g transform="translate(14,72)">
+        <rect width="92" height="22" rx="6" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)"/>
+        <g transform="translate(10,8)">
+          <path class="ico-sm" d="M3 5 h10 M6 5 V3 h4 v2 M5 5 l1 9 h4 l1 -9"/>
+        </g>
+        <text x="28" y="16" class="fg3 mono" font-size="11">Clear All</text>
+        <text x="500" y="16" class="fg3 mono" font-size="11" text-anchor="end">
+          <tspan class="fg1 bld">2</tspan>
+          <tspan> pinned · </tspan>
+          <tspan class="fg1 bld">14</tspan>
+          <tspan> total</tspan>
+        </text>
+      </g>
+
+      <!-- LIST -->
+      <g transform="translate(0,100)" clip-path="url(#listClip)">
+      <g transform="translate(14,6)">
+
+        <!-- Group: Pinned -->
+        <g class="grph s0" transform="translate(0,0)">
+          <g transform="translate(6,0)">
+            <path class="ico-sm" d="M8 2 L10.5 4.5 L13 5 L9.5 8.5 L10 13 L8 11 L6 13 L6.5 8.5 L3 5 L5.5 4.5 Z" stroke-width="1.3"/>
+          </g>
+          <text x="26" y="12" class="fg3 bld" font-size="10" letter-spacing=".6">PINNED</text>
+          <line x1="68" y1="9" x2="468" y2="9" class="ln"/>
+          <text x="500" y="12" class="fg3 mono" font-size="10" text-anchor="end">2</text>
+        </g>
+
+        <!-- FRESH card (HEX #7C5CFF, Figma, pinned) -->
+        <g class="card fresh s1" transform="translate(0,22)">
+          <rect class="cbg" width="504" height="78" rx="10"/>
+          <!-- Header -->
+          <g transform="translate(14,11)">
+            <rect x="0" y="0" width="34" height="16" rx="4" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.06)"/>
+            <text x="17" y="11" class="tC mono bld" font-size="10" text-anchor="middle">HEX</text>
+            <text x="42" y="12" class="fg1 sem" font-size="11">Figma</text>
+            <g transform="translate(78,3)">
+              <path d="M8 2 L10.5 4.5 L13 5 L9.5 8.5 L10 13 L8 11 L6 13 L6.5 8.5 L3 5 L5.5 4.5 Z" fill="#9E7BF0"/>
+            </g>
+            <text x="476" y="12" class="fg3 mono" font-size="11" text-anchor="end">just now</text>
+          </g>
+          <!-- Body: color swatch + hex + palette -->
+          <g transform="translate(14,34)">
+            <rect width="36" height="36" rx="8" fill="#7C5CFF" stroke="rgba(255,255,255,.16)"/>
+            <text x="48" y="15" class="fg0 mono bld" font-size="13">#7C5CFF</text>
+            <g transform="translate(48,22)">
+              <rect x="0" y="0" width="14" height="14" rx="4" fill="#7C5CFF"/>
+              <rect x="18" y="0" width="14" height="14" rx="4" fill="#5CE1E6"/>
+              <rect x="36" y="0" width="14" height="14" rx="4" fill="#FFB86A"/>
+              <rect x="54" y="0" width="14" height="14" rx="4" fill="#F06292"/>
+            </g>
+          </g>
+        </g>
+
+        <!-- Group: Last hour -->
+        <g class="grph s2" transform="translate(0,110)">
+          <g transform="translate(6,1)">
+            <circle class="ico-sm" cx="5" cy="6" r="5"/>
+            <path class="ico-sm" d="M5 3 v3 l2 1.5"/>
+          </g>
+          <text x="26" y="11" class="fg3 bld" font-size="10" letter-spacing=".6">LAST HOUR</text>
+          <line x1="82" y1="8" x2="468" y2="8" class="ln"/>
+          <text x="500" y="11" class="fg3 mono" font-size="10" text-anchor="end">3</text>
+        </g>
+
+        <!-- FOCUS card (TS code, VS Code) -->
+        <g class="card focus s3" transform="translate(0,130)">
+          <rect class="cbg" width="504" height="105" rx="10"/>
+          <!-- Header -->
+          <g transform="translate(14,11)">
+            <rect x="0" y="0" width="28" height="16" rx="4" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.06)"/>
+            <text x="14" y="11" class="tc mono bld" font-size="10" text-anchor="middle">TS</text>
+            <text x="36" y="12" class="fg1 sem" font-size="11">VS Code</text>
+            <text x="476" y="12" class="fg3 mono" font-size="11" text-anchor="end">2m ago</text>
+          </g>
+          <!-- Code block -->
+          <g transform="translate(14,32)">
+            <rect width="478" height="60" rx="6" fill="rgba(0,0,0,.28)" stroke="rgba(255,255,255,.06)"/>
+            <g clip-path="url(#codeClip)" transform="translate(10,14)" font-size="11" class="mono">
+              <text y="0" fill="#F4F1EA">
+                <tspan fill="#C8A2FF">const</tspan>
+                <tspan fill="#8FCDE8"> useDebounce</tspan>
+                <tspan fill="#8B8578"> = </tspan>
+                <tspan>(v, ms </tspan>
+                <tspan fill="#8B8578">= </tspan>
+                <tspan fill="#E8A77A">200</tspan>
+                <tspan>) </tspan>
+                <tspan fill="#8B8578">=&gt;</tspan>
+                <tspan> {</tspan>
+              </text>
+              <text y="16" fill="#F4F1EA">
+                <tspan>  </tspan>
+                <tspan fill="#C8A2FF">const</tspan>
+                <tspan> [x, setX] </tspan>
+                <tspan fill="#8B8578">= </tspan>
+                <tspan fill="#8FCDE8">useState</tspan>
+                <tspan>(v);</tspan>
+              </text>
+              <text y="32" fill="#F4F1EA">
+                <tspan>  </tspan>
+                <tspan fill="#8FCDE8">useEffect</tspan>
+                <tspan>(() </tspan>
+                <tspan fill="#8B8578">=&gt; </tspan>
+                <tspan>{ </tspan>
+                <tspan fill="#C8A2FF">const</tspan>
+                <tspan> t </tspan>
+                <tspan fill="#8B8578">= </tspan>
+                <tspan fill="#8FCDE8">setTimeout</tspan>
+                <tspan>(...</tspan>
+              </text>
+            </g>
+          </g>
+          <!-- Action buttons (shown on hover) -->
+          <g class="actions" transform="translate(370,4)">
+            <rect x="0" y="0" width="126" height="32" rx="8" fill="url(#actionFade)"/>
+            <g transform="translate(22,4)">
+              <rect width="24" height="24" rx="6" fill="transparent"/>
+              <g transform="translate(6,6)" class="ico-sm" stroke="#8B8578" stroke-width="1.6">
+                <path d="M6 0 L8 2 L10 3 L7 6 L7.5 10 L6 9 L4.5 10 L5 6 L2 3 L4 2 Z"/>
+              </g>
+            </g>
+            <g transform="translate(50,4)" class="copy">
+              <rect class="copy-bg" width="24" height="24" rx="6"/>
+              <g transform="translate(5,5)" class="ico-sm" stroke="#C7C2B8" stroke-width="1.6">
+                <rect x="4" y="4" width="9" height="9" rx="1.5"/>
+                <path d="M4 9 H2.5 A1.5 1.5 0 0 1 1 7.5 V2.5 A1.5 1.5 0 0 1 2.5 1 H7.5 A1.5 1.5 0 0 1 9 2.5 V4"/>
+              </g>
+            </g>
+            <g transform="translate(78,4)">
+              <rect width="24" height="24" rx="6" fill="transparent"/>
+              <g transform="translate(5,5)" class="ico-sm" stroke="#8B8578" stroke-width="1.6">
+                <path d="M2 4 h10 M5 4 V2 h4 v2 M4 4 l1 9 h4 l1 -9"/>
+              </g>
+            </g>
+          </g>
+        </g>
+
+        <!-- Link card -->
+        <g class="card s4" transform="translate(0,243)">
+          <rect class="cbg" width="504" height="55" rx="10"/>
+          <g transform="translate(14,11)">
+            <rect x="0" y="0" width="34" height="16" rx="4" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.06)"/>
+            <text x="17" y="11" class="tk mono bld" font-size="10" text-anchor="middle">URL</text>
+            <text x="42" y="12" class="fg1 sem" font-size="11">Firefox</text>
+            <text x="476" y="12" class="fg3 mono" font-size="11" text-anchor="end">7m ago</text>
+          </g>
+          <text x="14" y="46" class="tk" font-size="12">https://datatracker.ietf.org/doc/html/rfc9110#name-http-semantics</text>
+        </g>
+
+        <!-- Text Mail card -->
+        <g class="card s5" transform="translate(0,306)">
+          <rect class="cbg" width="504" height="74" rx="10"/>
+          <g transform="translate(14,11)">
+            <rect x="0" y="0" width="30" height="16" rx="4" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.06)"/>
+            <text x="15" y="11" class="tl mono bld" font-size="10" text-anchor="middle">TXT</text>
+            <text x="38" y="12" class="fg1 sem" font-size="11">Mail</text>
+            <text x="476" y="12" class="fg3 mono" font-size="11" text-anchor="end">28m ago</text>
+          </g>
+          <text x="14" y="44" class="fg0" font-size="12.5">
+            <tspan>Reminder: the quarterly review is moved to Thursday at 14:00 CET.</tspan>
+            <tspan x="14" dy="17">Please confirm attendance in the calendar invite.</tspan>
+          </text>
+        </g>
+
+        <!-- Group: Today -->
+        <g class="grph s6" transform="translate(0,390)">
+          <g transform="translate(6,1)">
+            <circle class="ico-sm" cx="5" cy="6" r="5"/>
+            <path class="ico-sm" d="M5 3 v3 l2 1.5"/>
+          </g>
+          <text x="26" y="11" class="fg3 bld" font-size="10" letter-spacing=".6">TODAY</text>
+          <line x1="60" y1="8" x2="468" y2="8" class="ln"/>
+          <text x="500" y="11" class="fg3 mono" font-size="10" text-anchor="end">5</text>
+        </g>
+
+        <!-- 2FA card -->
+        <g class="card s7" transform="translate(0,410)">
+          <rect class="cbg" width="504" height="62" rx="10"/>
+          <g transform="translate(14,11)">
+            <rect x="0" y="0" width="30" height="16" rx="4" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.06)"/>
+            <text x="15" y="11" class="tl mono bld" font-size="10" text-anchor="middle">TXT</text>
+            <text x="38" y="12" class="fg1 sem" font-size="11">Messages</text>
+            <rect x="90" y="0" width="28" height="16" rx="3" fill="rgba(229,188,107,.15)" stroke="rgba(229,188,107,.30)"/>
+            <text x="104" y="11" class="tw mono bld" font-size="9" text-anchor="middle">2FA</text>
+            <text x="476" y="12" class="fg3 mono" font-size="11" text-anchor="end">2h ago</text>
+          </g>
+          <text x="14" y="51" class="fg0 mono bld" font-size="19" letter-spacing="1.5">092 088</text>
+        </g>
+
+      </g>
+      </g>
+
+      <!-- Bottom fade over list -->
+      <rect x="0" y="570" width="532" height="50" fill="url(#listFade)"/>
+    </g>
+  </g>
+
+  <!-- Toast -->
+  <g class="toast" transform="translate(254,84)">
+    <rect width="140" height="32" rx="10" fill="#141218" stroke="rgba(255,255,255,.1)" opacity=".95"/>
+    <circle cx="16" cy="16" r="3.5" fill="#7ACF87"/>
+    <text x="28" y="20" class="fg0" font-size="12">Copied · TS</text>
+  </g>
+
+</g>
+</g>
+
+<!-- Cursor (lives in stage coords so it can float over everything) -->
+<g class="cursor-g">
+  <circle class="click-ring" cx="10" cy="10" r="8" fill="none" stroke="#9E7BF0" stroke-width="2"/>
+  <path d="M3 2 L3 18 L7 14 L10 20 L12 19 L9 13 L15 13 Z" fill="#F4F1EA" stroke="#0E0D12" stroke-width="1.2" stroke-linejoin="round"/>
+  <g class="hint" transform="translate(22,22)">
+    <rect x="0" y="0" width="44" height="16" rx="5" fill="#9E7BF0" opacity=".92"/>
+    <text x="22" y="12" fill="#0E0D12" font-size="10" text-anchor="middle" class="mono bld" font-weight="700" letter-spacing=".5">COPY</text>
+  </g>
+</g>
+
+</svg>

@@ -3,9 +3,10 @@
 A fast, keyboard-first clipboard manager for Windows. WPF + .NET 8, no background bloat, everything local.
 
 <p align="center">
-  <a href="preview.html">
-    <img src="https://img.shields.io/badge/open-preview.html-9E7BF0?style=for-the-badge" alt="Open HTML preview">
-  </a>
+  <img src="preview.svg" alt="Advanced Clipboarder animated preview" width="100%">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8">
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 10/11">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="MIT license">
@@ -46,7 +47,7 @@ Every time you copy something, Advanced Clipboarder snapshots it — text, code,
 
 ## Preview
 
-Open [`preview.html`](preview.html) in a browser for an animated walkthrough of the interface (new clip arrival → hover → copy → toast).
+The animated SVG above loops through the same demo as [`preview.html`](preview.html): new clip arrives → hover → copy → toast. Open the HTML file locally for a higher-fidelity version that uses the bundled Outfit font.
 
 ## Build & run
 
