@@ -61,7 +61,8 @@
   }
   .app-inner{animation:appIn 12s cubic-bezier(.2,.8,.2,1) infinite;transform-origin:360px 310px}
 
-  @keyframes slideIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+  /* Only animate opacity — CSS transform would override SVG positioning attribute. */
+  @keyframes slideIn{0%{opacity:0}100%{opacity:1}}
   .card,.grph{opacity:0;animation:slideIn .45s cubic-bezier(.2,.8,.2,1) forwards}
   .s0{animation-delay:.20s}.s1{animation-delay:.25s}.s2{animation-delay:.30s}
   .s3{animation-delay:.35s}.s4{animation-delay:.40s}.s5{animation-delay:.45s}
@@ -81,7 +82,9 @@
   @keyframes copyPress{0%,60%,72%,100%{fill:transparent}62%{fill:rgba(158,123,240,.22)}66%{fill:rgba(158,123,240,.12)}}
   .copy-bg{animation:copyPress 12s linear infinite}
 
-  @keyframes toastShow{0%,62%,86%,100%{opacity:0;transform:translate(0,10px)}64%,82%{opacity:1;transform:translate(0,0)}}
+  /* Opacity-only; outer <g> keeps the (254,84) position. Inner toast-fx group
+     handles any optional slide via its own transform. */
+  @keyframes toastShow{0%,62%,86%,100%{opacity:0}64%,82%{opacity:1}}
   .toast{opacity:0;animation:toastShow 12s cubic-bezier(.2,.8,.2,1) infinite}
 
   @keyframes cursorMove{
