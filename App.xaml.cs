@@ -8,9 +8,13 @@ public partial class App : Application
     private TrayService? _tray;
     private MainWindow? _main;
 
-    // Minimum time between GitHub API calls on startup — prevents hammering the
-    // release endpoint if the user restarts the app repeatedly.
-    private static readonly TimeSpan UpdateCheckInterval = TimeSpan.FromHours(6);
+    // Minimum time between GitHub API calls. Low enough that the next
+    // window-open usually re-checks, high enough not to hammer the endpoint
+    // if the user toggles Ctrl+Shift+V repeatedly in a short burst.
+    private static readonly TimeSpan UpdateCheckInterval = TimeSpan.FromMinutes(30);
+
+    // Serialises concurrent checks (startup + first window-open can race by a few seconds).
+    private int _updateCheckInFlight;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -40,32 +44,44 @@ public partial class App : Application
         _tray.ClearRequested += () => Dispatcher.Invoke(() => _main.VM.ClearHistory());
         _tray.PauseToggled   += paused => Dispatcher.Invoke(() => _main.VM.IsCapturePaused = paused);
         _main.PauseCaptureChanged += paused => _tray.SetPaused(paused);
+        // Re-check on every window surface: user opens the app → we opportunistically
+        // look for a newer release. Throttled by UpdateCheckInterval inside.
+        _main.WindowShown += () => _ = CheckForUpdatesAsync(TimeSpan.Zero);
 
         SingleInstance.ListenForShowRequest(
             () => Dispatcher.Invoke(() => _main?.ShowFromTray()));
 
-        _ = CheckForUpdatesAsync();
+        _ = CheckForUpdatesAsync(TimeSpan.FromSeconds(4));
     }
 
-    private async Task CheckForUpdatesAsync()
+    private async Task CheckForUpdatesAsync(TimeSpan startupDelay)
     {
-        // Delay so the app finishes hooking ClipboardMonitor/HotkeyService first;
-        // also keeps us out of the way of any login-time I/O contention.
-        await Task.Delay(TimeSpan.FromSeconds(4));
+        // Guard against two concurrent checks (startup + first ShowFromTray race).
+        if (Interlocked.Exchange(ref _updateCheckInFlight, 1) == 1) return;
 
-        var settings = SettingsStore.Load();
-        var now = DateTime.UtcNow;
-        if (settings.LastUpdateCheckUtc is { } last && now - last < UpdateCheckInterval)
-            return;
+        try
+        {
+            if (startupDelay > TimeSpan.Zero)
+                await Task.Delay(startupDelay);
 
-        var info = await UpdateService.CheckAsync();
-        SettingsStore.Update(s => s.LastUpdateCheckUtc = now);
+            var settings = SettingsStore.Load();
+            var now = DateTime.UtcNow;
+            if (settings.LastUpdateCheckUtc is { } last && now - last < UpdateCheckInterval)
+                return;
 
-        if (info is null) return;
-        if (string.Equals(settings.SkippedUpdateTag, info.TagName, StringComparison.OrdinalIgnoreCase))
-            return;
+            var info = await UpdateService.CheckAsync();
+            SettingsStore.Update(s => s.LastUpdateCheckUtc = now);
 
-        await Dispatcher.InvokeAsync(() => PromptAndInstall(info));
+            if (info is null) return;
+            if (string.Equals(settings.SkippedUpdateTag, info.TagName, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            await Dispatcher.InvokeAsync(() => PromptAndInstall(info));
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _updateCheckInFlight, 0);
+        }
     }
 
     private async void PromptAndInstall(UpdateInfo info)

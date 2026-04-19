@@ -33,6 +33,10 @@ public partial class MainWindow : Window
     private IReadOnlyList<string> _blocklist = CaptureRules.DefaultBlockedProcesses;
 
     public event Action<bool>? PauseCaptureChanged;
+    // Raised every time the window is surfaced (hotkey, tray click). App listens
+    // to fire an opportunistic update check — catches releases published while the
+    // app was sitting in the tray for days.
+    public event Action? WindowShown;
 
     public MainWindow()
     {
@@ -130,6 +134,8 @@ public partial class MainWindow : Window
             SearchBox.Clear();
             SearchBox.Focus();
         }, DispatcherPriority.Input);
+
+        WindowShown?.Invoke();
     }
 
     // Anchors the window next to the focused input's caret. Falls back to the
