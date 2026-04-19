@@ -6,6 +6,7 @@
         xmlns:tmpl="clr-namespace:Clipboarder.Templates"
         xmlns:m="clr-namespace:Clipboarder.Models"
         Title="Clipboard"
+        Icon="pack://application:,,,/assets/icon.ico"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
         Width="920" Height="800" SnapsToDevicePixels="True"

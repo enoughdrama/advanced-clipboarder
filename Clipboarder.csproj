@@ -11,6 +11,7 @@
     <RootNamespace>Clipboarder</RootNamespace>
     <AssemblyName>Clipboarder</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>assets\icon.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
@@ -19,6 +20,7 @@
     <Resource Include="Fonts\Outfit-Medium.ttf"/>
     <Resource Include="Fonts\Outfit-SemiBold.ttf"/>
     <Resource Include="Fonts\Outfit-Bold.ttf"/>
+    <Resource Include="assets\icon.ico"/>
   </ItemGroup>
 
 </Project>

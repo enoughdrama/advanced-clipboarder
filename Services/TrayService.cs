@@ -1,8 +1,6 @@
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using DColor = System.Drawing.Color;
-using DBrush = System.Drawing.Brush;
 
 namespace Clipboarder.Services;
 
@@ -66,22 +64,14 @@ public sealed class TrayService : IDisposable
 
     private static Icon BuildIcon()
     {
-        var bmp = new Bitmap(16, 16);
-        using (var g = Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(DColor.Transparent);
-            using DBrush bg = new SolidBrush(DColor.FromArgb(30, 28, 38));
-            g.FillRectangle(bg, 0, 0, 16, 16);
-            using DBrush accent = new SolidBrush(DColor.FromArgb(158, 123, 240));
-            g.FillRectangle(accent, 3, 2, 10, 3);
-            using DBrush line = new SolidBrush(DColor.FromArgb(199, 194, 184));
-            g.FillRectangle(line, 3, 7, 10, 1);
-            g.FillRectangle(line, 3, 10, 10, 1);
-            g.FillRectangle(line, 3, 13, 6, 1);
-        }
-        var hIcon = bmp.GetHicon();
-        return Icon.FromHandle(hIcon);
+        // Load the multi-resolution .ico bundled as a WPF resource; the
+        // Icon ctor picks the frame matching the system's small-icon size,
+        // so the tray stays crisp on high-DPI displays.
+        var uri = new Uri("pack://application:,,,/assets/icon.ico", UriKind.Absolute);
+        var res = System.Windows.Application.GetResourceStream(uri);
+        using var stream = res.Stream;
+        var target = SystemInformation.SmallIconSize;
+        return new Icon(stream, target.Width, target.Height);
     }
 
     public void Dispose()
