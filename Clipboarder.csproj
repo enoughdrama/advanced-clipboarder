@@ -13,6 +13,12 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>assets\icon.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
+    <!-- Single source of truth for the version. Must match the GitHub release tag
+         (without the leading "v") so UpdateService can compare correctly. -->
+    <Version>0.1.0</Version>
+    <AssemblyTitle>Advanced Clipboarder</AssemblyTitle>
+    <Product>Advanced Clipboarder</Product>
+    <Company>enoughdrama</Company>
   </PropertyGroup>
 
   <ItemGroup>

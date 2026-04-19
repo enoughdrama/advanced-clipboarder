@@ -33,7 +33,7 @@ public class MainViewModel : INotifyPropertyChanged
             OnChanged();
             ItemsView.Refresh();
             OnChanged(nameof(FilteredCount));
-            SettingsStore.Save(new AppSettings { LastCategoryId = value?.Id });
+            SettingsStore.Update(s => s.LastCategoryId = value?.Id);
         }
     }
 

@@ -6,6 +6,11 @@ namespace Clipboarder.Services;
 public sealed class AppSettings
 {
     public string? LastCategoryId { get; set; }
+
+    // Auto-updater: skip prompting again for a version the user said "not now" to.
+    public string? SkippedUpdateTag { get; set; }
+    // Throttle API calls so startup isn't a GitHub ping every launch.
+    public DateTime? LastUpdateCheckUtc { get; set; }
 }
 
 public static class SettingsStore
@@ -34,5 +39,13 @@ public static class SettingsStore
             File.WriteAllText(Path_, json);
         }
         catch { }
+    }
+
+    // Load → mutate → save, so callers can touch one field without wiping the rest.
+    public static void Update(Action<AppSettings> mutate)
+    {
+        var s = Load();
+        mutate(s);
+        Save(s);
     }
 }
