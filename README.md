@@ -29,7 +29,10 @@ Every time you copy something, Advanced Clipboarder snapshots it — text, code,
 - **Paste-at-caret** — `Enter` pastes directly into the app you came from
 - **Grouped timeline** — Last hour / Today / Yesterday / Earlier
 - **Live refresh** — new clips land with a subtle green flash
-- **Persistent history** — debounced JSON writes, survives restarts
+- **Encrypted history** — on-disk store is sealed with Windows DPAPI (per-user); other local users can't read it
+- **Password-manager aware** — clips from KeePass, 1Password, Bitwarden, LastPass, Dashlane, Enpass, RoboForm, NordPass, Keeper, ProtonPass, Psono are skipped at the source
+- **Auto-update** — checks GitHub for a newer release on startup and offers a silent, one-click install
+- **Persistent history** — debounced writes, survives restarts
 - **Single-instance + tray** — second launch just re-opens the window
 - **Keyboard everything** — `Esc` to hide, `Ctrl+P` to pin, `Ctrl+F` to focus search
 - **Native WPF, no Electron** — ~40 MB install, instant cold start
@@ -89,7 +92,25 @@ Data flow:
 2. On each change, a `ClipItem` is built — type is inferred, language is sniffed with `CodeDetector`.
 3. `MainViewModel.AddIncoming` dedupes against the last item and prepends to an `ObservableCollection`.
 4. `ICollectionView` filters by category + search and groups by time bucket.
-5. `HistoryStore` persists to `%LOCALAPPDATA%/Clipboarder/history.json` with a 500 ms debounce.
+5. Before step 2 runs, `CaptureRules` checks the clipboard's exclusion formats (`ExcludeClipboardContentFromMonitorProcessing`, `CanIncludeInClipboardHistory`, `CanUploadToCloudClipboard`, `Clipboard Viewer Ignore`) and the foreground process name against the blocklist — password-manager clips never enter memory.
+6. `HistoryStore` serialises the list to UTF-8 JSON, seals it with DPAPI (`CurrentUser` scope + domain-separation salt), and writes `%APPDATA%/Clipboarder/history.dat` atomically.
+
+## Privacy
+
+- **Encryption at rest.** `history.dat` is a DPAPI blob tied to your Windows account; another user on the same machine cannot read it. On first launch after upgrading from a pre-0.1.1 build, the legacy `history.json` is migrated and deleted.
+- **Capture rules.** The following process name prefixes are blocked by default (case-insensitive, matched with `StartsWith` on `Process.ProcessName`):
+
+  `KeePass`, `1Password`, `Bitwarden`, `LastPass`, `Dashlane`, `RoboForm`, `Enpass`, `NordPass`, `Keeper`, `Protonpass`, `Psono`
+
+  To customise, edit `%APPDATA%\Clipboarder\settings.json`:
+
+  ```json
+  {
+    "BlockedProcesses": ["KeePass", "1Password", "MyCorpSecretsApp"]
+  }
+  ```
+
+  Omit the key (or set it to `null`) to use the defaults; set it to `[]` to disable the blocklist entirely (exclusion-format checks still apply).
 
 ## Roadmap
 
@@ -97,7 +118,6 @@ Data flow:
 - [ ] Snippet library with template variables
 - [ ] Global search palette (Spotlight-style)
 - [ ] Import/export history
-- [ ] Per-app capture rules (block passwords from KeePass, etc.)
 
 ## License
 

@@ -11,6 +11,11 @@ public sealed class AppSettings
     public string? SkippedUpdateTag { get; set; }
     // Throttle API calls so startup isn't a GitHub ping every launch.
     public DateTime? LastUpdateCheckUtc { get; set; }
+
+    // Per-app capture rules. Process-name prefixes that bypass the capture pipeline
+    // entirely (matched with StartsWith, case-insensitive). `null` = use the built-in
+    // defaults (password managers); an empty list = block nothing.
+    public List<string>? BlockedProcesses { get; set; }
 }
 
 public static class SettingsStore

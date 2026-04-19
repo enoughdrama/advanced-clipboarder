@@ -29,6 +29,8 @@ public partial class MainWindow : Window
     // Blanket-ignore all clipboard events until this deadline — set whenever we write
     // to the clipboard ourselves, so our own Copy/Paste never loops back into history.
     private DateTime _suppressUntil = DateTime.MinValue;
+    // Cached at OnLoaded so every Ctrl+C doesn't re-read settings.json off disk.
+    private IReadOnlyList<string> _blocklist = CaptureRules.DefaultBlockedProcesses;
 
     public event Action<bool>? PauseCaptureChanged;
 
@@ -66,6 +68,13 @@ public partial class MainWindow : Window
         // Prime _lastClipboardText so whatever is currently on the clipboard when
         // the app starts doesn't get captured as a new item on first change.
         try { _lastClipboardText = Clipboard.ContainsText() ? Clipboard.GetText() : null; } catch { }
+
+        // settings.BlockedProcesses == null → fall back to defaults; explicit empty
+        // list means the user disabled the feature.
+        var s = SettingsStore.Load();
+        _blocklist = s.BlockedProcesses is { } list
+            ? (IReadOnlyList<string>)list
+            : CaptureRules.DefaultBlockedProcesses;
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -201,6 +210,9 @@ public partial class MainWindow : Window
             if (VM.IsCapturePaused) return;
             // Drop events that fire as a consequence of our own Copy/Paste writes.
             if (DateTime.Now < _suppressUntil) return;
+            // Capture rules gate: standard exclusion formats + per-app blocklist.
+            // Runs before any clipboard content read, so secrets don't touch memory.
+            if (CaptureRules.ShouldSkip(_blocklist)) return;
             var sourceName = DetectSourceName();
 
             // Text first — covers the common case and supports dedup via _lastClipboardText.
