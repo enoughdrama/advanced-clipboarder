@@ -1,6 +1,6 @@
 # Advanced Clipboarder
 
-A fast, keyboard-first clipboard manager for Windows. WPF + .NET 8, no background bloat, everything local.
+A fast, keyboard-first clipboard manager for Windows. everything local.
 
 <p align="center">
   <img src="preview.svg" alt="Advanced Clipboarder animated preview" width="100%">
