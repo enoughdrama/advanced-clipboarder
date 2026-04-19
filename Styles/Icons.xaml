@@ -43,6 +43,10 @@
 
     <PathGeometry x:Key="GeomX" Figures="M6,6 L18,18 M18,6 L6,18"/>
 
+    <!-- Arrow-down-to-tray glyph for "download" / "install update" affordances. -->
+    <PathGeometry x:Key="GeomDownload"
+                  Figures="M12,3 L12,15 M7,10 L12,15 L17,10 M5,19 L19,19"/>
+
     <GeometryGroup x:Key="GeomCopy">
         <RectangleGeometry Rect="9,9,11,11" RadiusX="2" RadiusY="2"/>
         <PathGeometry Figures="M5,15 L5,5 C5,3.9 5.9,3 7,3 L17,3"/>

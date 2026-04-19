@@ -94,7 +94,11 @@ public partial class App : Application
             $"Installed: {current}\nAvailable:  {info.Latest.ToString(3)}\n\n" +
             "Install it now? The app will briefly close and relaunch.";
 
-        var ok = ConfirmDialog.Show(_main.IsVisible ? _main : null, "Update available", message, "Install");
+        var ok = ConfirmDialog.Show(
+            _main.IsVisible ? _main : null,
+            "Update available", message,
+            confirmLabel: "Install",
+            kind: ConfirmKind.Primary);
         if (!ok)
         {
             // "Not now" ≈ skip this specific version; user will see the next release.

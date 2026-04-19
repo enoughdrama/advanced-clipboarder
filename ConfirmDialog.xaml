@@ -19,11 +19,13 @@
         </Border.Effect>
         <StackPanel>
             <DockPanel Margin="0,0,0,10">
-                <Border DockPanel.Dock="Left"
+                <!-- Icon swatch — colours and glyph are set from code-behind per Kind. -->
+                <Border x:Name="IconSwatch" DockPanel.Dock="Left"
                         Width="36" Height="36" CornerRadius="18"
                         Background="#1FE57A6B" Margin="0,0,12,0"
                         VerticalAlignment="Top">
-                    <Path Data="{StaticResource GeomTrash}"
+                    <Path x:Name="IconPath"
+                          Data="{StaticResource GeomTrash}"
                           Stroke="{StaticResource Danger}" StrokeThickness="1.8"
                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
                           Width="16" Height="16" Stretch="Uniform"
@@ -71,17 +73,24 @@
                         </Style>
                     </Button.Style>
                 </Button>
+                <!-- Accent colour is bound from code-behind so the same dialog can render
+                     both destructive (red) and affirmative (purple) CTAs. -->
                 <Button x:Name="ConfirmBtn" Click="OnConfirm"
                         Content="Delete"
                         Height="32" Padding="14,0"
                         Cursor="Hand" IsDefault="True">
+                    <Button.Resources>
+                        <SolidColorBrush x:Key="ConfirmAccent" Color="#E57A6B"/>
+                        <SolidColorBrush x:Key="ConfirmAccentHover" Color="#EF8A7C"/>
+                        <SolidColorBrush x:Key="ConfirmAccentPressed" Color="#D56A5B"/>
+                    </Button.Resources>
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="bd" CornerRadius="8"
-                                                Background="#E57A6B"
+                                                Background="{DynamicResource ConfirmAccent}"
                                                 BorderThickness="0"
                                                 Padding="{TemplateBinding Padding}">
                                             <ContentPresenter HorizontalAlignment="Center"
@@ -92,10 +101,10 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="#EF8A7C"/>
+                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource ConfirmAccentHover}"/>
                                             </Trigger>
                                             <Trigger Property="IsPressed" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="#D56A5B"/>
+                                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource ConfirmAccentPressed}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>

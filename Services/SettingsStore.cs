@@ -43,13 +43,39 @@ public static class SettingsStore
 
     public static AppSettings Load()
     {
+        AppSettings s;
         try
         {
-            if (!File.Exists(Path_)) return new AppSettings();
-            var json = File.ReadAllText(Path_);
-            return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            s = File.Exists(Path_)
+                ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(Path_)) ?? new AppSettings()
+                : new AppSettings();
         }
-        catch { return new AppSettings(); }
+        catch { s = new AppSettings(); }
+
+        // First-run / newly-introduced fields materialise as their defaults on disk
+        // so the user can see exactly what's being enforced and edit from there.
+        // Empty collections / explicit zeros are preserved — only `null` hydrates.
+        if (HydrateDefaults(s)) Save(s);
+        return s;
+    }
+
+    private static bool HydrateDefaults(AppSettings s)
+    {
+        var dirty = false;
+        if (s.BlockedProcesses is null)
+        {
+            s.BlockedProcesses = new List<string>(CaptureRules.DefaultBlockedProcesses);
+            dirty = true;
+        }
+        if (s.BlockedPatterns is null)
+        {
+            s.BlockedPatterns = new List<string>(CaptureRules.DefaultBlockedPatterns);
+            dirty = true;
+        }
+        if (s.TwoFactorTtlSeconds is null) { s.TwoFactorTtlSeconds = 60; dirty = true; }
+        if (s.UnpinnedTtlDays     is null) { s.UnpinnedTtlDays     = 0;  dirty = true; }
+        if (s.MaxUnpinnedItems    is null) { s.MaxUnpinnedItems    = 0;  dirty = true; }
+        return dirty;
     }
 
     public static void Save(AppSettings s)
