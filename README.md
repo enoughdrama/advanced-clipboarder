@@ -31,7 +31,7 @@ Every time you copy something, Advanced Clipboarder snapshots it — text, code,
 - **Live refresh** — new clips land with a subtle green flash
 - **Encrypted history** — on-disk store is sealed with Windows DPAPI (per-user); other local users can't read it
 - **Password-manager aware** — clips from KeePass, 1Password, Bitwarden, LastPass, Dashlane, Enpass, RoboForm, NordPass, Keeper, ProtonPass, Psono are skipped at the source
-- **Content filters** — credit-card-like strings, SSNs, AWS / GitHub / Slack tokens are blocked by regex before they touch history (user-extendable)
+- **Content filters** — credit-card-shaped strings are blocked by regex before they touch history (user-extendable, developer tokens left alone on purpose)
 - **Auto-expiring secrets** — 2FA codes wipe themselves after 60 s by default; configurable TTLs and a hard cap on non-pinned history
 - **Auto-update** — checks GitHub for a newer release on startup and offers a silent, one-click install
 - **Persistent history** — debounced writes, survives restarts
@@ -114,7 +114,7 @@ Data flow:
 
   Omit the key (or set it to `null`) to use the defaults; set it to `[]` to disable the blocklist entirely (exclusion-format checks still apply).
 
-- **Content-pattern block list.** After the source-process check, the clipboard text itself is matched (trimmed, full-match) against a regex list. Defaults block credit-card-like digit groups, US SSNs, and API tokens with well-known prefixes (`AKIA…`, `ghp_…`, `xoxb-…`). Configure with `BlockedPatterns`:
+- **Content-pattern block list.** After the source-process check, the clipboard text itself is matched (trimmed, full-match) against a regex list. Defaults cover **credit-card-shaped strings only** — things like GitHub PATs, AWS keys, or SSNs are *not* in the defaults because blocking them would break normal dev workflows with silent "where did my paste go?" results. Opt in explicitly if you want them. Configure with `BlockedPatterns`:
 
   ```json
   {

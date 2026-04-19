@@ -46,16 +46,17 @@ public static class CaptureRules
         "Psono",
     };
 
-    // Default content-pattern block list. Applied after the source-process check,
-    // against the trimmed clipboard string. Kept conservative: only high-signal
-    // full-match patterns go in, to keep false-positives near zero.
+    // Default content-pattern block list. Deliberately narrow: developer tokens
+    // (AWS keys, GitHub PATs, Slack bot tokens) and region-specific IDs like SSNs
+    // are NOT in here — blocking them would break legitimate dev workflows and
+    // produce silent "where did my paste go?" surprises. Credit-card-shaped
+    // strings stay because they rarely appear as legitimate clipboard content.
+    //
+    // Users who want stricter filtering can extend via `BlockedPatterns` in
+    // settings.json.
     public static readonly IReadOnlyList<string> DefaultBlockedPatterns = new[]
     {
         @"^(?:\d[ -]?){13,19}$",      // credit card number (13–19 digits, optional space/dash separators)
-        @"^\d{3}-\d{2}-\d{4}$",       // US Social Security Number
-        @"^AKIA[0-9A-Z]{16}$",        // AWS access key ID
-        @"^ghp_[A-Za-z0-9]{36}$",     // GitHub personal access token
-        @"^xox[baprs]-[A-Za-z0-9-]{10,}$", // Slack tokens
     };
 
     [DllImport("user32.dll")] private static extern IntPtr GetClipboardOwner();
