@@ -38,7 +38,7 @@
   <filter id="blur"><feGaussianBlur stdDeviation="16"/></filter>
 </defs>
 
-<style>
+<style><![CDATA[
   text{font-family:'Inter','Segoe UI','Helvetica Neue',system-ui,Arial,sans-serif;fill:#F4F1EA;font-size:13px;text-rendering:geometricPrecision}
   .mono{font-family:'Cascadia Mono','Consolas','JetBrains Mono','SF Mono',Menlo,monospace}
   .sem{font-weight:500}.bld{font-weight:600}
@@ -82,8 +82,7 @@
   @keyframes copyPress{0%,60%,72%,100%{fill:transparent}62%{fill:rgba(158,123,240,.22)}66%{fill:rgba(158,123,240,.12)}}
   .copy-bg{animation:copyPress 12s linear infinite}
 
-  /* Opacity-only; outer <g> keeps the (254,84) position. Inner toast-fx group
-     handles any optional slide via its own transform. */
+  /* Opacity-only; outer group keeps the (254,84) position. */
   @keyframes toastShow{0%,62%,86%,100%{opacity:0}64%,82%{opacity:1}}
   .toast{opacity:0;animation:toastShow 12s cubic-bezier(.2,.8,.2,1) infinite}
 
@@ -108,7 +107,7 @@
     .app-inner{opacity:1;transform:translate(0,0) scale(1)}
     .card,.grph{opacity:1;transform:translateY(0)}
   }
-</style>
+]]></style>
 
 <rect width="1040" height="720" fill="#050508"/>
 <rect width="1040" height="720" fill="url(#glowA)" opacity=".7"/>
