@@ -16,6 +16,23 @@ public sealed class AppSettings
     // entirely (matched with StartsWith, case-insensitive). `null` = use the built-in
     // defaults (password managers); an empty list = block nothing.
     public List<string>? BlockedProcesses { get; set; }
+
+    // Content-pattern block list (full-match regexes, trimmed). Runs after the
+    // process check, against the clipboard text. `null` = use defaults (credit
+    // cards, SSN, AWS/GitHub/Slack tokens); `[]` = nothing.
+    public List<string>? BlockedPatterns { get; set; }
+
+    // Retention — auto-delete non-pinned items to keep the history lean and
+    // minimize the window where a sensitive clip lingers on disk.
+    //   TwoFactorTtlSeconds — items with Tag="2FA" (auto-detected OTP codes).
+    //                         Default 60s, 0 keeps them forever.
+    //   UnpinnedTtlDays     — general cap on how long any non-pinned item lives.
+    //                         Default 0 = keep forever (opt-in behaviour).
+    //   MaxUnpinnedItems    — hard count cap; oldest non-pinned get evicted.
+    //                         Default 0 = no cap.
+    public int? TwoFactorTtlSeconds { get; set; }
+    public int? UnpinnedTtlDays     { get; set; }
+    public int? MaxUnpinnedItems    { get; set; }
 }
 
 public static class SettingsStore

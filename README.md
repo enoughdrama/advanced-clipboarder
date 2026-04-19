@@ -31,6 +31,8 @@ Every time you copy something, Advanced Clipboarder snapshots it — text, code,
 - **Live refresh** — new clips land with a subtle green flash
 - **Encrypted history** — on-disk store is sealed with Windows DPAPI (per-user); other local users can't read it
 - **Password-manager aware** — clips from KeePass, 1Password, Bitwarden, LastPass, Dashlane, Enpass, RoboForm, NordPass, Keeper, ProtonPass, Psono are skipped at the source
+- **Content filters** — credit-card-like strings, SSNs, AWS / GitHub / Slack tokens are blocked by regex before they touch history (user-extendable)
+- **Auto-expiring secrets** — 2FA codes wipe themselves after 60 s by default; configurable TTLs and a hard cap on non-pinned history
 - **Auto-update** — checks GitHub for a newer release on startup and offers a silent, one-click install
 - **Persistent history** — debounced writes, survives restarts
 - **Single-instance + tray** — second launch just re-opens the window
@@ -111,6 +113,36 @@ Data flow:
   ```
 
   Omit the key (or set it to `null`) to use the defaults; set it to `[]` to disable the blocklist entirely (exclusion-format checks still apply).
+
+- **Content-pattern block list.** After the source-process check, the clipboard text itself is matched (trimmed, full-match) against a regex list. Defaults block credit-card-like digit groups, US SSNs, and API tokens with well-known prefixes (`AKIA…`, `ghp_…`, `xoxb-…`). Configure with `BlockedPatterns`:
+
+  ```json
+  {
+    "BlockedPatterns": [
+      "^(?:\\d[ -]?){13,19}$",
+      "^ghp_[A-Za-z0-9]{36}$",
+      "^sk_live_[A-Za-z0-9]{24,}$"
+    ]
+  }
+  ```
+
+  Bad regexes are silently skipped — one typo won't disable the whole filter.
+
+- **Retention — auto-delete.** Non-pinned items can be evicted on a schedule:
+
+  ```json
+  {
+    "TwoFactorTtlSeconds": 60,
+    "UnpinnedTtlDays":     0,
+    "MaxUnpinnedItems":    0
+  }
+  ```
+
+  * `TwoFactorTtlSeconds` — auto-detected OTP codes (`Tag="2FA"`) get wiped this fast. Default **60s**, enough to paste and forget. Set to `0` to keep forever.
+  * `UnpinnedTtlDays` — hard TTL on every non-pinned item. Default `0` = keep forever.
+  * `MaxUnpinnedItems` — count cap; oldest non-pinned are evicted first. Default `0` = no cap.
+
+  Pruning runs on the same 30s refresh tick that updates relative timestamps, so the worst case a 2FA code lingers is ~`TtlSeconds + 30s`.
 
 ## Roadmap
 

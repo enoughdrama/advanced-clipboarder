@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace Clipboarder.Services;
@@ -45,6 +46,18 @@ public static class CaptureRules
         "Psono",
     };
 
+    // Default content-pattern block list. Applied after the source-process check,
+    // against the trimmed clipboard string. Kept conservative: only high-signal
+    // full-match patterns go in, to keep false-positives near zero.
+    public static readonly IReadOnlyList<string> DefaultBlockedPatterns = new[]
+    {
+        @"^(?:\d[ -]?){13,19}$",      // credit card number (13–19 digits, optional space/dash separators)
+        @"^\d{3}-\d{2}-\d{4}$",       // US Social Security Number
+        @"^AKIA[0-9A-Z]{16}$",        // AWS access key ID
+        @"^ghp_[A-Za-z0-9]{36}$",     // GitHub personal access token
+        @"^xox[baprs]-[A-Za-z0-9-]{10,}$", // Slack tokens
+    };
+
     [DllImport("user32.dll")] private static extern IntPtr GetClipboardOwner();
     [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
@@ -63,6 +76,43 @@ public static class CaptureRules
 
         return false;
     }
+
+    /// <summary>
+    /// True if the given clipboard text matches a blocked content pattern
+    /// (credit-card-like, SSN, API tokens, anything the user configured).
+    /// Run after ShouldSkip — this one needs the text itself.
+    /// </summary>
+    public static bool MatchesBlockedPattern(string text, IReadOnlyList<Regex>? patterns)
+    {
+        if (patterns is null || patterns.Count == 0) return false;
+        if (string.IsNullOrEmpty(text)) return false;
+        var trimmed = text.Trim();
+        foreach (var re in patterns)
+        {
+            try { if (re.IsMatch(trimmed)) return true; }
+            catch { /* bad user pattern — ignore rather than crash the capture loop */ }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Compile a list of pattern strings into regexes. Silently drops invalid
+    /// entries so a single bad user pattern can't take the whole filter out.
+    /// </summary>
+    public static IReadOnlyList<Regex> CompilePatterns(IEnumerable<string>? patterns)
+    {
+        if (patterns is null) return Array.Empty<Regex>();
+        var list = new List<Regex>();
+        foreach (var p in patterns)
+        {
+            if (string.IsNullOrWhiteSpace(p)) continue;
+            try { list.Add(new Regex(p, RegexOptions.Compiled | RegexOptions.CultureInvariant)); }
+            catch { /* skip invalid pattern */ }
+        }
+        return list;
+    }
+
+    public static IReadOnlyList<Regex> CompileDefaultPatterns() => CompilePatterns(DefaultBlockedPatterns);
 
     private static bool HasExclusionFormat()
     {

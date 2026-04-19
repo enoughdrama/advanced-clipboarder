@@ -136,7 +136,12 @@ public class MainViewModel : INotifyPropertyChanged
         _toastTimer.Tick += (_, _) => { _toastTimer.Stop(); Toast = ""; };
 
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-        _refreshTimer.Tick += (_, _) => { foreach (var it in Items) it.Refresh(); ItemsView.Refresh(); };
+        _refreshTimer.Tick += (_, _) =>
+        {
+            foreach (var it in Items) it.Refresh();
+            PruneByRetention();
+            ItemsView.Refresh();
+        };
         _refreshTimer.Start();
 
         // Debounced save — coalesces bursts of mutations into one file write.
@@ -151,6 +156,50 @@ public class MainViewModel : INotifyPropertyChanged
     {
         _persistTimer.Stop();
         _persistTimer.Start();
+    }
+
+    // Drops non-pinned items past their TTL and trims to MaxUnpinnedItems, if set.
+    // Called from the 30s refresh tick — worst-case a 2FA code lingers ~90s past its
+    // TwoFactorTtlSeconds, which is fine for the threat model (keep OTP in history
+    // just long enough to paste, then wipe).
+    private void PruneByRetention()
+    {
+        var s = SettingsStore.Load();
+        int otpTtl = s.TwoFactorTtlSeconds ?? 60;   // default: 60s for 2FA codes
+        int anyTtl = s.UnpinnedTtlDays     ?? 0;    // default: keep forever
+        int maxN   = s.MaxUnpinnedItems    ?? 0;    // default: no cap
+
+        var now = DateTime.Now;
+        var doomed = new List<ClipItem>();
+
+        foreach (var it in Items)
+        {
+            if (it.Pinned) continue;
+            if (otpTtl > 0 && it.Tag == "2FA" &&
+                (now - it.Timestamp).TotalSeconds > otpTtl)
+            {
+                doomed.Add(it); continue;
+            }
+            if (anyTtl > 0 && (now - it.Timestamp).TotalDays > anyTtl)
+            {
+                doomed.Add(it);
+            }
+        }
+
+        if (maxN > 0)
+        {
+            var nonPinned = Items.Where(x => !x.Pinned && !doomed.Contains(x))
+                                 .OrderByDescending(x => x.Timestamp)
+                                 .Skip(maxN);
+            doomed.AddRange(nonPinned);
+        }
+
+        if (doomed.Count == 0) return;
+
+        foreach (var it in doomed) Items.Remove(it);
+        if (SelectedItem is not null && doomed.Contains(SelectedItem)) SelectedItem = null;
+        UpdateCounts();
+        FlushPersistDebounced();
     }
 
     // Synchronous flush for app shutdown — bypasses the debounce.

@@ -31,6 +31,8 @@ public partial class MainWindow : Window
     private DateTime _suppressUntil = DateTime.MinValue;
     // Cached at OnLoaded so every Ctrl+C doesn't re-read settings.json off disk.
     private IReadOnlyList<string> _blocklist = CaptureRules.DefaultBlockedProcesses;
+    private IReadOnlyList<System.Text.RegularExpressions.Regex> _patterns =
+        CaptureRules.CompileDefaultPatterns();
 
     public event Action<bool>? PauseCaptureChanged;
     // Raised every time the window is surfaced (hotkey, tray click). App listens
@@ -79,6 +81,9 @@ public partial class MainWindow : Window
         _blocklist = s.BlockedProcesses is { } list
             ? (IReadOnlyList<string>)list
             : CaptureRules.DefaultBlockedProcesses;
+        _patterns = s.BlockedPatterns is { } pats
+            ? CaptureRules.CompilePatterns(pats)
+            : CaptureRules.CompileDefaultPatterns();
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -226,6 +231,10 @@ public partial class MainWindow : Window
             {
                 var txt = Clipboard.GetText();
                 if (string.IsNullOrEmpty(txt) || txt == _lastClipboardText) return;
+                // Content pattern block (credit cards, SSNs, API tokens, user-configured).
+                // Deliberately don't update _lastClipboardText so the blocked string is
+                // treated as "never seen" by later dedup passes.
+                if (CaptureRules.MatchesBlockedPattern(txt, _patterns)) return;
                 _lastClipboardText = txt;
                 var it = BuildFromText(txt, sourceName);
                 Dispatcher.BeginInvoke(DispatcherPriority.Background, () => VM.AddIncoming(it));
