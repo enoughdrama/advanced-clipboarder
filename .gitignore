@@ -60,3 +60,8 @@ appsettings.Development.json
 .claude/
 .cursor/
 .aider*
+
+## ==== Installer artifacts (ship via GitHub releases, not git) ====
+installer/*.exe
+installer/*.zip
+installer/portable-tmp/
