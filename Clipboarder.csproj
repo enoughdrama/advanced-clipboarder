@@ -15,7 +15,7 @@
     <LangVersion>latest</LangVersion>
     <!-- Single source of truth for the version. Must match the GitHub release tag
          (without the leading "v") so UpdateService can compare correctly. -->
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <AssemblyTitle>Advanced Clipboarder</AssemblyTitle>
     <Product>Advanced Clipboarder</Product>
     <Company>enoughdrama</Company>
@@ -27,6 +27,12 @@
     <Resource Include="Fonts\Outfit-SemiBold.ttf"/>
     <Resource Include="Fonts\Outfit-Bold.ttf"/>
     <Resource Include="assets\icon.ico"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- DPAPI wrapper — in a NuGet because ProtectedData is Windows-only
+         and can't live in the cross-platform System.Security.Cryptography core. -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
 </Project>
