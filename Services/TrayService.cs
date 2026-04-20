@@ -12,6 +12,7 @@ public sealed class TrayService : IDisposable
     public event Action? ShowRequested;
     public event Action? QuitRequested;
     public event Action? ClearRequested;
+    public event Action? SettingsRequested;
     public event Action<bool>? PauseToggled;
 
     public TrayService()
@@ -44,6 +45,9 @@ public sealed class TrayService : IDisposable
         var clearItem = new ToolStripMenuItem("Clear history");
         clearItem.Click += (_, _) => ClearRequested?.Invoke();
 
+        var settingsItem = new ToolStripMenuItem("Settings\u2026");
+        settingsItem.Click += (_, _) => SettingsRequested?.Invoke();
+
         var quitItem = new ToolStripMenuItem("Quit");
         quitItem.Click += (_, _) => QuitRequested?.Invoke();
 
@@ -52,6 +56,7 @@ public sealed class TrayService : IDisposable
         menu.Items.Add(_pauseItem);
         menu.Items.Add(clearItem);
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(settingsItem);
         menu.Items.Add(quitItem);
 
         _icon.ContextMenuStrip = menu;

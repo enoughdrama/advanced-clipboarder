@@ -39,10 +39,11 @@ public partial class App : Application
         _main.Hide();
 
         _tray = new TrayService();
-        _tray.ShowRequested  += () => Dispatcher.Invoke(() => _main.ShowFromTray());
-        _tray.QuitRequested  += () => Dispatcher.Invoke(QuitApp);
-        _tray.ClearRequested += () => Dispatcher.Invoke(() => _main.VM.ClearHistory());
-        _tray.PauseToggled   += paused => Dispatcher.Invoke(() => _main.VM.IsCapturePaused = paused);
+        _tray.ShowRequested     += () => Dispatcher.Invoke(() => _main.ShowFromTray());
+        _tray.QuitRequested     += () => Dispatcher.Invoke(QuitApp);
+        _tray.ClearRequested    += () => Dispatcher.Invoke(() => _main.VM.ClearHistory());
+        _tray.SettingsRequested += () => Dispatcher.Invoke(OpenSettings);
+        _tray.PauseToggled      += paused => Dispatcher.Invoke(() => _main.VM.IsCapturePaused = paused);
         _main.PauseCaptureChanged += paused => _tray.SetPaused(paused);
         // Re-check on every window surface: user opens the app → we opportunistically
         // look for a newer release. Throttled by UpdateCheckInterval inside.
@@ -124,6 +125,17 @@ public partial class App : Application
         // Give the installer a moment to spawn before we let ourselves be closed by it.
         await Task.Delay(400);
         QuitApp();
+    }
+
+    // Shared entrypoint for both the tray "Settings…" item and Ctrl+, in MainWindow.
+    // Uses _main as owner only when it's on-screen — the tray path typically opens
+    // settings while the main window is hidden, and WPF refuses owned dialogs
+    // parented to an invisible window.
+    private void OpenSettings()
+    {
+        var w = new SettingsWindow();
+        if (_main is { IsVisible: true }) w.Owner = _main;
+        w.ShowDialog();
     }
 
     private void QuitApp()

@@ -75,6 +75,16 @@ public partial class MainWindow : Window
         // the app starts doesn't get captured as a new item on first change.
         try { _lastClipboardText = Clipboard.ContainsText() ? Clipboard.GetText() : null; } catch { }
 
+        ReloadCaptureRules();
+
+        // Keep the in-memory blocklist / pattern regexes in sync with the
+        // Settings window — without this the user's new rules only apply
+        // after a full app restart.
+        SettingsWindow.SettingsSaved += (_, _) => ReloadCaptureRules();
+    }
+
+    private void ReloadCaptureRules()
+    {
         // settings.BlockedProcesses == null → fall back to defaults; explicit empty
         // list means the user disabled the feature.
         var s = SettingsStore.Load();
@@ -373,6 +383,17 @@ public partial class MainWindow : Window
 
     private void PasteItem(ClipItem it)
     {
+        // Template clips go through the prompt-and-render pipeline before
+        // we touch the clipboard, so the substituted text is what ends up
+        // pasted — the original template content stays intact in history.
+        if (it.IsTemplate)
+        {
+            var rendered = TryRenderTemplate(it);
+            if (rendered is null) return;     // user cancelled the prompt
+            PasteRawText(it, rendered);
+            return;
+        }
+
         _suppressUntil = DateTime.Now.AddMilliseconds(800);
         try
         {
@@ -404,6 +425,45 @@ public partial class MainWindow : Window
 
         Dispatcher.BeginInvoke(() => PasteService.RestoreFocusAndPaste(target),
             DispatcherPriority.Background);
+    }
+
+    // Pastes an explicit text payload as if it came from `it` (same toast,
+    // timestamp bump, focus restore). Used for template rendering + paste
+    // transforms where the pasted string isn't the clip's raw content.
+    private void PasteRawText(ClipItem it, string text)
+    {
+        _suppressUntil = DateTime.Now.AddMilliseconds(800);
+        try
+        {
+            _lastClipboardText = text;
+            Clipboard.SetText(text);
+        }
+        catch { }
+
+        VM.ShowToastMessage($"Pasted · {it.Source}");
+        it.Timestamp = DateTime.Now;
+        VM.UpdateCounts();
+        VM.FlushPersistDebounced();
+
+        var target = _targetHwnd;
+        HideToTray();
+
+        Dispatcher.BeginInvoke(() => PasteService.RestoreFocusAndPaste(target),
+            DispatcherPriority.Background);
+    }
+
+    // Collects {input:…} values via PromptDialog, then substitutes. Returns
+    // null if the user cancels. The PromptDialog is an owned window so the
+    // main window's OnWindowDeactivated guard doesn't hide us mid-prompt.
+    private string? TryRenderTemplate(ClipItem it)
+    {
+        var labels = TemplateEngine.CollectInputLabels(it.Content);
+        if (labels.Count == 0)
+            return TemplateEngine.Render(it.Content);
+
+        var values = PromptDialog.Show(this, labels);
+        if (values is null) return null;
+        return TemplateEngine.Render(it.Content, values);
     }
 
     private void OnSearchFocusChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -463,6 +523,25 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Ctrl+, — the convention is shared by VS Code, Chrome, GitHub Desktop.
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.OemComma)
+        {
+            OpenSettings();
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+T on the top-ranked visible card opens the transform picker
+        // without having to reach for the mouse. Matches the existing
+        // keyboard-first feel of Enter-to-paste / Ctrl+P-to-pin.
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.T)
+        {
+            var it = FirstVisibleItem();
+            if (it is not null) OpenTransformMenuFor(it, anchor: null);
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.Enter && SearchBox.IsKeyboardFocused)
         {
             var it = FirstVisibleItem();
@@ -470,6 +549,109 @@ public partial class MainWindow : Window
         }
 
         base.OnPreviewKeyDown(e);
+    }
+
+    private void OnSettingsClick(object sender, RoutedEventArgs e)
+    {
+        OpenSettings();
+        e.Handled = true;
+    }
+
+    private void OpenSettings()
+    {
+        var w = new SettingsWindow();
+        if (IsVisible) w.Owner = this;
+        w.ShowDialog();
+    }
+
+    private void OnTransformClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement fe) return;
+        if (fe.Tag is not ClipItem it) return;
+        OpenTransformMenuFor(it, fe);
+        e.Handled = true;
+    }
+
+    // Builds the transform ContextMenu from scratch each time — the item set
+    // depends on clip type (colors get format swaps, everything else gets the
+    // text pipeline). `anchor` is the button whose position the menu opens
+    // from; passing null opens at cursor (used by the Ctrl+T shortcut).
+    private void OpenTransformMenuFor(ClipItem it, FrameworkElement? anchor)
+    {
+        var menu = new ContextMenu
+        {
+            StaysOpen = false,
+            PlacementTarget = anchor,
+            Placement = anchor is null
+                ? System.Windows.Controls.Primitives.PlacementMode.MousePoint
+                : System.Windows.Controls.Primitives.PlacementMode.Bottom,
+        };
+
+        if (it.Type == ClipType.Color)
+            BuildColorFormatMenu(menu, it);
+        else
+            BuildTextTransformMenu(menu, it);
+
+        if (menu.Items.Count == 0) return;
+        menu.IsOpen = true;
+    }
+
+    private void BuildColorFormatMenu(ContextMenu menu, ClipItem it)
+    {
+        var current = ColorFormatSwap.Detect(it.Content);
+        menu.Items.Add(new MenuItem
+        {
+            Header = "Paste as",
+            Style = (Style)FindResource("MenuHeader"),
+        });
+
+        foreach (var entry in ColorFormatSwap.All)
+        {
+            var mi = new MenuItem
+            {
+                Header = entry.Label + (current == entry.Format ? "  (current)" : ""),
+                IsEnabled = current != entry.Format,
+            };
+            var captured = entry;
+            mi.Click += (_, _) =>
+            {
+                var converted = ColorFormatSwap.Convert(it.Content, captured.Format);
+                if (converted is null)
+                {
+                    VM.ShowToastMessage("Couldn't parse color");
+                    return;
+                }
+                PasteRawText(it, converted);
+            };
+            menu.Items.Add(mi);
+        }
+    }
+
+    private void BuildTextTransformMenu(ContextMenu menu, ClipItem it)
+    {
+        // Group by Category, insert a header above each group. Keeps the menu
+        // walkable by eye rather than being one long undifferentiated list.
+        string? lastCategory = null;
+        foreach (var entry in PasteTransforms.All)
+        {
+            if (entry.Category != lastCategory)
+            {
+                menu.Items.Add(new MenuItem
+                {
+                    Header = entry.Category,
+                    Style = (Style)FindResource("MenuHeader"),
+                });
+                lastCategory = entry.Category;
+            }
+            var mi = new MenuItem { Header = entry.Label };
+            var captured = entry;
+            mi.Click += (_, _) =>
+            {
+                var transformed = PasteTransforms.Apply(captured.Kind, it.Content);
+                PasteRawText(it, transformed);
+            };
+            menu.Items.Add(mi);
+        }
     }
 
     private ClipItem? FirstVisibleItem()

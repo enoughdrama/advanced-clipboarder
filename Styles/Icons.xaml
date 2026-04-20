@@ -56,4 +56,24 @@
 
     <PathGeometry x:Key="GeomSettings" Figures="M12,9 A3,3 0 1,0 12,15 A3,3 0 1,0 12,9"/>
 
+    <!-- Gear for the settings entry point. Stroked as a 12-tooth cog with a
+         hollow centre so the 1.6px stroke stays readable at 16×16. -->
+    <PathGeometry x:Key="GeomGear"
+                  Figures="M12,8 A4,4 0 1,0 12,16 A4,4 0 1,0 12,8
+                           M12,2 L12,5 M12,19 L12,22
+                           M2,12 L5,12 M19,12 L22,12
+                           M5,5 L7,7 M17,17 L19,19
+                           M19,5 L17,7 M7,17 L5,19"/>
+
+    <!-- Swap/transform glyph: two horizontal arrows pointing opposite directions.
+         Reads as "convert" without being as literal as a gear. -->
+    <PathGeometry x:Key="GeomTransform"
+                  Figures="M4,9 L18,9 L14,5 M18,9 L14,13
+                           M20,15 L6,15 L10,11 M6,15 L10,19"/>
+
+    <!-- "T" glyph used for the template badge on pinned clips that contain
+         {token} substitutions. -->
+    <PathGeometry x:Key="GeomTemplate"
+                  Figures="M5,6 L19,6 M12,6 L12,19"/>
+
 </ResourceDictionary>

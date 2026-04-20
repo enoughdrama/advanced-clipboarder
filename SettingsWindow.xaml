@@ -1,0 +1,361 @@
+<Window x:Class="Clipboarder.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings"
+        Icon="pack://application:,,,/assets/icon.ico"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen"
+        Width="560" Height="640"
+        FontFamily="{StaticResource UiFont}"
+        FontWeight="Medium"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Grayscale"
+        TextOptions.TextHintingMode="Animated"
+        RenderOptions.BitmapScalingMode="HighQuality"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Window.Resources>
+        <!-- Scoped cascade: any ScrollBar beneath the window (including the ones
+             hosted inside the multiline TextBox templates) picks up the dark
+             thin style, so the Privacy textareas don't render with the native
+             light-grey scrollbar. -->
+        <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+    </Window.Resources>
+    <Border CornerRadius="18"
+            Background="{StaticResource AppBg}"
+            BorderBrush="{StaticResource Line2}" BorderThickness="1">
+        <Border.Clip>
+            <!-- Explicit corner clip so the header/footer separator lines don't
+                 poke past the rounded outer edge. WPF's CornerRadius only rounds
+                 the Border's own paint, not its children. -->
+            <RectangleGeometry Rect="0,0,560,640" RadiusX="18" RadiusY="18"/>
+        </Border.Clip>
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="32" ShadowDepth="10" Color="Black" Opacity="0.6"/>
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Padding="20,16"
+                    BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="OnDrag">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right"
+                            Style="{StaticResource IconButton}"
+                            Width="28" Height="28"
+                            Click="OnCancel"
+                            ToolTip="Close">
+                        <Path Data="{StaticResource GeomX}"
+                              Stroke="{StaticResource Fg2}" StrokeThickness="1.6"
+                              Width="11" Height="11" Stretch="Uniform"/>
+                    </Button>
+                    <StackPanel>
+                        <TextBlock Text="Settings"
+                                   Foreground="{StaticResource Fg0}"
+                                   FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="Privacy, retention, and capture rules."
+                                   Foreground="{StaticResource Fg3}"
+                                   FontSize="12" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                          Style="{StaticResource ThinScrollViewer}">
+                <StackPanel Margin="24,18,24,12">
+
+                    <!-- ============ GENERAL ============ -->
+                    <TextBlock Text="GENERAL"
+                               Foreground="{StaticResource Fg3}"
+                               FontSize="11" FontWeight="SemiBold"
+                               Margin="2,0,0,8"/>
+
+                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,16"
+                            Background="#08FFFFFF" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel>
+                            <CheckBox x:Name="AutoStartCheck"
+                                      Style="{StaticResource SettingCheck}"
+                                      Content="Start with Windows"
+                                      Margin="0,0,0,6"/>
+                            <TextBlock Text="Launches Clipboarder to the tray when you sign in."
+                                       Foreground="{StaticResource Fg3}"
+                                       FontSize="12" Margin="22,-2,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ============ RETENTION ============ -->
+                    <TextBlock Text="RETENTION"
+                               Foreground="{StaticResource Fg3}"
+                               FontSize="11" FontWeight="SemiBold"
+                               Margin="2,0,0,8"/>
+
+                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,16"
+                            Background="#08FFFFFF" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel>
+                            <!-- Retention rows put the NumField first so DockPanel honours Dock="Right" —
+                                 on the LAST child with LastChildFill=True, Dock is ignored and the child
+                                 just fills whatever's left. Label StackPanel comes second and fills.  -->
+                            <DockPanel Margin="0,0,0,10">
+                                <Border DockPanel.Dock="Right" Style="{StaticResource NumField}">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="sec"
+                                                   Foreground="{StaticResource Fg3}"
+                                                   FontFamily="{StaticResource MonoFont}" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBox x:Name="TwoFaTtlBox"
+                                                 Style="{StaticResource NumBox}"
+                                                 PreviewTextInput="OnNumericInput"/>
+                                    </DockPanel>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="2FA auto-wipe"
+                                               Foreground="{StaticResource Fg0}"
+                                               FontSize="14"/>
+                                    <TextBlock Text="Delete detected OTP codes after N seconds. 0 keeps them."
+                                               Foreground="{StaticResource Fg3}"
+                                               FontSize="12" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </DockPanel>
+
+                            <DockPanel Margin="0,0,0,10">
+                                <Border DockPanel.Dock="Right" Style="{StaticResource NumField}">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="days"
+                                                   Foreground="{StaticResource Fg3}"
+                                                   FontFamily="{StaticResource MonoFont}" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBox x:Name="UnpinnedTtlBox"
+                                                 Style="{StaticResource NumBox}"
+                                                 PreviewTextInput="OnNumericInput"/>
+                                    </DockPanel>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Unpinned auto-clear"
+                                               Foreground="{StaticResource Fg0}"
+                                               FontSize="14"/>
+                                    <TextBlock Text="Delete non-pinned entries older than N days. 0 keeps them."
+                                               Foreground="{StaticResource Fg3}"
+                                               FontSize="12" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </DockPanel>
+
+                            <DockPanel>
+                                <Border DockPanel.Dock="Right" Style="{StaticResource NumField}">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="items"
+                                                   Foreground="{StaticResource Fg3}"
+                                                   FontFamily="{StaticResource MonoFont}" FontSize="12"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBox x:Name="MaxUnpinnedBox"
+                                                 Style="{StaticResource NumBox}"
+                                                 PreviewTextInput="OnNumericInput"/>
+                                    </DockPanel>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Max unpinned items"
+                                               Foreground="{StaticResource Fg0}"
+                                               FontSize="14"/>
+                                    <TextBlock Text="Hard cap on non-pinned history. 0 = unlimited."
+                                               Foreground="{StaticResource Fg3}"
+                                               FontSize="12" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ============ PRIVACY ============ -->
+                    <TextBlock Text="PRIVACY"
+                               Foreground="{StaticResource Fg3}"
+                               FontSize="11" FontWeight="SemiBold"
+                               Margin="2,0,0,8"/>
+
+                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,12"
+                            Background="#08FFFFFF" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right"
+                                        Style="{StaticResource LinkButton}"
+                                        Content="Reset to defaults"
+                                        Click="OnResetProcesses"/>
+                                <TextBlock Text="Blocked processes"
+                                           Foreground="{StaticResource Fg0}"
+                                           FontSize="14"/>
+                            </DockPanel>
+                            <TextBlock Text="One process name per line. StartsWith, case-insensitive (e.g. KeePass matches KeePassXC)."
+                                       Foreground="{StaticResource Fg3}"
+                                       FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                            <Border CornerRadius="8" Padding="10,8" BorderThickness="1" Height="86">
+                                <Border.Background><SolidColorBrush Color="#14FFFFFF"/></Border.Background>
+                                <Border.BorderBrush><SolidColorBrush Color="#1AFFFFFF"/></Border.BorderBrush>
+                                <TextBox x:Name="ProcessesBox"
+                                         Background="Transparent" BorderThickness="0"
+                                         Foreground="{StaticResource Fg0}"
+                                         FontFamily="{StaticResource MonoFont}" FontSize="12.5"
+                                         AcceptsReturn="True" AcceptsTab="False"
+                                         VerticalScrollBarVisibility="Auto"
+                                         CaretBrush="{StaticResource Accent}"
+                                         SelectionBrush="{StaticResource AccentSoft}"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,16"
+                            Background="#08FFFFFF" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right"
+                                        Style="{StaticResource LinkButton}"
+                                        Content="Reset to defaults"
+                                        Click="OnResetPatterns"/>
+                                <TextBlock Text="Content patterns"
+                                           Foreground="{StaticResource Fg0}"
+                                           FontSize="14"/>
+                            </DockPanel>
+                            <TextBlock Text="One .NET regex per line. A clipboard text matching any pattern is dropped before it's stored."
+                                       Foreground="{StaticResource Fg3}"
+                                       FontSize="12" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                            <Border CornerRadius="8" Padding="10,8" BorderThickness="1" Height="86">
+                                <Border.Background><SolidColorBrush Color="#14FFFFFF"/></Border.Background>
+                                <Border.BorderBrush><SolidColorBrush Color="#1AFFFFFF"/></Border.BorderBrush>
+                                <TextBox x:Name="PatternsBox"
+                                         Background="Transparent" BorderThickness="0"
+                                         Foreground="{StaticResource Fg0}"
+                                         FontFamily="{StaticResource MonoFont}" FontSize="12.5"
+                                         AcceptsReturn="True" AcceptsTab="False"
+                                         VerticalScrollBarVisibility="Auto"
+                                         CaretBrush="{StaticResource Accent}"
+                                         SelectionBrush="{StaticResource AccentSoft}"
+                                         TextChanged="OnPatternsChanged"/>
+                            </Border>
+
+                            <TextBlock Text="TEST"
+                                       Foreground="{StaticResource Fg3}"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Margin="2,10,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" CornerRadius="8" Padding="10,0" BorderThickness="1" Height="32">
+                                    <Border.Background><SolidColorBrush Color="#14FFFFFF"/></Border.Background>
+                                    <Border.BorderBrush><SolidColorBrush Color="#1AFFFFFF"/></Border.BorderBrush>
+                                    <TextBox x:Name="PatternTestBox"
+                                             Style="{StaticResource SearchBox}"
+                                             FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                             VerticalAlignment="Center"
+                                             TextChanged="OnTestTextChanged"/>
+                                </Border>
+                                <TextBlock x:Name="PatternTestResult"
+                                           Grid.Column="1"
+                                           Foreground="{StaticResource Fg3}"
+                                           FontFamily="{StaticResource MonoFont}" FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="10,0,0,0"
+                                           Text="type to test"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ============ ABOUT ============ -->
+                    <TextBlock Text="ABOUT"
+                               Foreground="{StaticResource Fg3}"
+                               FontSize="11" FontWeight="SemiBold"
+                               Margin="2,0,0,8"/>
+
+                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,4"
+                            Background="#08FFFFFF" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock x:Name="VersionText"
+                                       Foreground="{StaticResource Fg1}"
+                                       FontSize="13"/>
+                            <TextBlock Foreground="{StaticResource Fg3}"
+                                       FontSize="12" Margin="0,6,0,0"
+                                       TextWrapping="Wrap">
+                                History is encrypted with Windows DPAPI scoped to your user account
+                                and never leaves this machine.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Padding="20,14"
+                    BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right"
+                            Click="OnSave"
+                            Content="Save"
+                            Height="32" Padding="18,0"
+                            Cursor="Hand" IsDefault="True">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" CornerRadius="8"
+                                                    Background="{StaticResource Accent}"
+                                                    BorderThickness="0"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  TextBlock.Foreground="White"
+                                                                  TextBlock.FontSize="13"
+                                                                  TextBlock.FontWeight="SemiBold"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#B09AF5"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button DockPanel.Dock="Right"
+                            Click="OnCancel"
+                            Content="Cancel"
+                            Height="32" Padding="14,0" Margin="0,0,8,0"
+                            Cursor="Hand" IsCancel="True">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" CornerRadius="8"
+                                                    Background="#0AFFFFFF"
+                                                    BorderBrush="{StaticResource Line2}"
+                                                    BorderThickness="1"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  TextBlock.Foreground="{StaticResource Fg1}"
+                                                                  TextBlock.FontSize="13"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#14FFFFFF"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <TextBlock x:Name="StatusText"
+                               Foreground="{StaticResource Fg3}"
+                               FontSize="12"
+                               VerticalAlignment="Center"/>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

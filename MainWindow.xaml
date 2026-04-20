@@ -109,6 +109,17 @@
                                                        FontSize="9" FontWeight="SemiBold"/>
                                         </Border>
 
+                                        <Border DockPanel.Dock="Left" Margin="8,0,0,0"
+                                                Background="#299E7BF0" BorderBrush="#619E7BF0" BorderThickness="1"
+                                                CornerRadius="3" Padding="5,2" VerticalAlignment="Center"
+                                                ToolTip="Template — contains {tokens} substituted at paste"
+                                                Visibility="{Binding IsTemplate, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="TMPL"
+                                                       Foreground="{StaticResource Accent}"
+                                                       FontFamily="{StaticResource MonoFont}"
+                                                       FontSize="9" FontWeight="SemiBold"/>
+                                        </Border>
+
                                         <Path DockPanel.Dock="Left" Margin="8,0,0,0"
                                               Data="{StaticResource GeomPinFill}"
                                               Fill="{StaticResource Accent}"
@@ -141,6 +152,16 @@
                                                     ToolTip="Pin / Unpin">
                                                 <Path x:Name="PinIcon"
                                                       Data="{StaticResource GeomPin}"
+                                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                      StrokeThickness="1.6"
+                                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                                      Width="13" Height="13" Stretch="Uniform"/>
+                                            </Button>
+                                            <Button Style="{StaticResource IconButtonSmall}"
+                                                    Click="OnTransformClick"
+                                                    Tag="{Binding}"
+                                                    ToolTip="Transform &amp; paste">
+                                                <Path Data="{StaticResource GeomTransform}"
                                                       Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                                       StrokeThickness="1.6"
                                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
@@ -520,6 +541,18 @@
                             Background="Transparent"
                             MouseLeftButtonDown="OnDragTopbar">
                         <DockPanel Margin="14,12" Background="Transparent">
+                            <Button DockPanel.Dock="Right"
+                                    Style="{StaticResource IconButton}"
+                                    Width="36" Height="36" Margin="8,0,0,0"
+                                    Click="OnSettingsClick"
+                                    ToolTip="Settings (Ctrl+,)">
+                                <Path Data="{StaticResource GeomGear}"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      StrokeThickness="1.6"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                      Width="15" Height="15" Stretch="Uniform"/>
+                            </Button>
+
                             <!-- Height locked so the row doesn't pulse when the Clear button
                                  (22px) replaces the smaller '/' hint on input. -->
                             <Border x:Name="SearchHost" CornerRadius="10" Padding="10,0" BorderThickness="1"

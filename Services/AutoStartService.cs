@@ -33,4 +33,24 @@ public static class AutoStartService
         }
         catch { }
     }
+
+    public static bool IsRegistered()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: false);
+            return key?.GetValue(ValueName) is string s && !string.IsNullOrEmpty(s);
+        }
+        catch { return false; }
+    }
+
+    public static void Unregister()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
+            if (key?.GetValue(ValueName) is not null) key.DeleteValue(ValueName, throwOnMissingValue: false);
+        }
+        catch { }
+    }
 }

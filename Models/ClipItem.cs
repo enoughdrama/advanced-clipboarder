@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Windows.Media;
+using Clipboarder.Services;
 
 namespace Clipboarder.Models;
 
@@ -126,6 +127,15 @@ public class ClipItem : INotifyPropertyChanged
             return "Text";
         }
     }
+
+    // A text-ish clip whose content has {date}/{clipboard}/{input:…}/etc. tokens.
+    // Pasting such a clip goes through TemplateEngine + PromptDialog instead
+    // of the direct clipboard-set path. Computed, so editing Content (which
+    // is init-only today) is unnecessary.
+    [JsonIgnore]
+    public bool IsTemplate =>
+        Type is ClipType.Text or ClipType.Code or ClipType.Email
+        && TemplateEngine.IsTemplate(Content);
 
     public void Refresh()
     {
