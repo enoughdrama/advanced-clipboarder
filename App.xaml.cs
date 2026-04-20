@@ -52,10 +52,14 @@ public partial class App : Application
         SingleInstance.ListenForShowRequest(
             () => Dispatcher.Invoke(() => _main?.ShowFromTray()));
 
-        _ = CheckForUpdatesAsync(TimeSpan.FromSeconds(4));
+        // Startup check bypasses the throttle — an .exe launch is a discrete
+        // user action, not something that can burst like Ctrl+Shift+V, so
+        // there's no reason to swallow it just because the previous session
+        // checked recently.
+        _ = CheckForUpdatesAsync(TimeSpan.FromSeconds(4), force: true);
     }
 
-    private async Task CheckForUpdatesAsync(TimeSpan startupDelay)
+    private async Task CheckForUpdatesAsync(TimeSpan startupDelay, bool force = false)
     {
         // Guard against two concurrent checks (startup + first ShowFromTray race).
         if (Interlocked.Exchange(ref _updateCheckInFlight, 1) == 1) return;
@@ -67,7 +71,9 @@ public partial class App : Application
 
             var settings = SettingsStore.Load();
             var now = DateTime.UtcNow;
-            if (settings.LastUpdateCheckUtc is { } last && now - last < UpdateCheckInterval)
+            if (!force
+                && settings.LastUpdateCheckUtc is { } last
+                && now - last < UpdateCheckInterval)
                 return;
 
             var info = await UpdateService.CheckAsync();
