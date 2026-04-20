@@ -137,6 +137,24 @@ public class ClipItem : INotifyPropertyChanged
         Type is ClipType.Text or ClipType.Code or ClipType.Email
         && TemplateEngine.IsTemplate(Content);
 
+    // Lazily starts a background metadata fetch the first time the tooltip
+    // opens for a Link clip. Null for all other types.
+    [JsonIgnore]
+    public LinkPreview? Preview
+    {
+        get
+        {
+            if (Type != ClipType.Link) return null;
+            if (_preview is null)
+            {
+                _preview = new LinkPreview { IsLoading = true };
+                LinkPreviewService.FetchAsync(_preview, Content);
+            }
+            return _preview;
+        }
+    }
+    private LinkPreview? _preview;
+
     // Drives the Transform button's visibility on each card. Image + File
     // clips don't have any meaningful paste-time conversion, so hide the
     // button entirely rather than open an empty menu.

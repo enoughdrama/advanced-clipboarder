@@ -10,6 +10,8 @@
     <conv:UrlQueryPartsConverter         x:Key="HP_UrlParts"/>
     <conv:Base64DecodePreviewConverter   x:Key="HP_Base64"/>
     <conv:Base64VisibilityConverter      x:Key="HP_Base64Vis"/>
+    <conv:BoolToVisibilityConverter      x:Key="HP_BoolToVis"/>
+    <conv:NullToVisibilityConverter      x:Key="HP_NotNullToVis"/>
 
     <DataTemplate x:Key="Preview_Color">
         <StackPanel Orientation="Horizontal">
@@ -48,6 +50,20 @@
 
     <DataTemplate x:Key="Preview_Link">
         <StackPanel MaxWidth="460">
+            <!-- Page title — shown once the background fetch completes -->
+            <TextBlock Text="{Binding Preview.Title}"
+                       Foreground="{StaticResource Fg0}"
+                       FontSize="13" FontWeight="SemiBold"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,8"
+                       Visibility="{Binding Preview.Title, Converter={StaticResource HP_NotNullToVis}}"/>
+            <!-- Loading indicator — visible only while the fetch is in flight -->
+            <TextBlock Text="Fetching…"
+                       Foreground="{StaticResource Fg3}"
+                       FontSize="12" FontStyle="Italic"
+                       Margin="0,0,0,8"
+                       Visibility="{Binding Preview.IsLoading, Converter={StaticResource HP_BoolToVis}}"/>
+            <!-- URL breakdown (always present) -->
             <TextBlock Text="{Binding Content, Converter={StaticResource HP_UrlHost}}"
                        Foreground="{StaticResource Fg0}"
                        FontFamily="{StaticResource MonoFont}"
