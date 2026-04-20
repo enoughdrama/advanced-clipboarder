@@ -349,10 +349,17 @@
                                        FontFamily="{StaticResource MonoFont}" FontSize="10"
                                        Margin="20,0,0,0"
                                        VerticalAlignment="Center"/>
+                            <!-- PlacementTarget = TemplatedParent pins the popup to the
+                                 outer MenuItem boundary instead of this Grid (whose right
+                                 edge sits 10px inside the Border's padding, which is why
+                                 the submenu appeared to overlap the parent column). -->
                             <Popup x:Name="PART_Popup"
-                                   AllowsTransparency="True" Placement="Right"
+                                   AllowsTransparency="True"
+                                   Placement="Right"
+                                   PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                                    IsOpen="{TemplateBinding IsSubmenuOpen}"
-                                   PopupAnimation="Fade" HorizontalOffset="2">
+                                   PopupAnimation="Fade"
+                                   HorizontalOffset="4">
                                 <Border CornerRadius="10"
                                         Background="#F0141218"
                                         BorderBrush="{StaticResource Line2}"
