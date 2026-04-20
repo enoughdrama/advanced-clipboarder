@@ -43,6 +43,11 @@ public sealed class AppSettings
     // — users who need to screenshot the app for a bug report won't expect
     // it on by default. Null hydrates to false.
     public bool? HideFromScreenCapture { get; set; }
+
+    // Toggles the rich type-specific hover peek on clip cards. Null hydrates
+    // to true — the feature is useful by default, but scrolling through a
+    // dense history with tooltips firing can feel noisy for some users.
+    public bool? HoverPreviewEnabled { get; set; }
 }
 
 public static class SettingsStore
@@ -87,6 +92,7 @@ public static class SettingsStore
         if (s.MaxUnpinnedItems    is null) { s.MaxUnpinnedItems    = 0;  dirty = true; }
         if (s.OpenWindowHotkey    is null) { s.OpenWindowHotkey    = "Ctrl+Shift+V"; dirty = true; }
         if (s.HideFromScreenCapture is null) { s.HideFromScreenCapture = false; dirty = true; }
+        if (s.HoverPreviewEnabled   is null) { s.HoverPreviewEnabled   = true;  dirty = true; }
         return dirty;
     }
 

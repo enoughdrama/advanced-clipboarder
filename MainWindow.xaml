@@ -110,7 +110,8 @@
                                 ToolTipService.InitialShowDelay="350"
                                 ToolTipService.ShowDuration="60000"
                                 ToolTipService.Placement="Right"
-                                ToolTipService.HorizontalOffset="8">
+                                ToolTipService.HorizontalOffset="8"
+                                ToolTipService.IsEnabled="{Binding DataContext.HoverPreviewEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
                             <Border.ToolTip>
                                 <ToolTip Style="{StaticResource HoverPreviewTooltip}"
                                          Content="{Binding}"/>

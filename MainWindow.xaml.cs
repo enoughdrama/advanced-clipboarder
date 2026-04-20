@@ -89,6 +89,7 @@ public partial class MainWindow : Window
             ReloadCaptureRules();
             RebindHotkeyFromSettings();
             PrivacyService.ApplyFromSettings(this);
+            VM.HoverPreviewEnabled = SettingsStore.Load().HoverPreviewEnabled != false;
         };
     }
 

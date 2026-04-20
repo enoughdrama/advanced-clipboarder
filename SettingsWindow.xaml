@@ -91,6 +91,14 @@
                                       Margin="0,0,0,6"/>
                             <TextBlock Text="Windows renders Clipboarder as black in Teams / Zoom / OBS / screenshots. Turn off to screenshot the app for a bug report."
                                        Foreground="{StaticResource Fg3}"
+                                       FontSize="12" Margin="22,-2,0,12" TextWrapping="Wrap"/>
+
+                            <CheckBox x:Name="HoverPreviewCheck"
+                                      Style="{StaticResource SettingCheck}"
+                                      Content="Show hover preview"
+                                      Margin="0,0,0,6"/>
+                            <TextBlock Text="After ~350 ms on a card, pop a type-specific peek — full-size swatch for colors, larger image preview, parsed URL breakdown, Base64-decoded view. Turn off if the tooltips feel noisy when browsing."
+                                       Foreground="{StaticResource Fg3}"
                                        FontSize="12" Margin="22,-2,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>

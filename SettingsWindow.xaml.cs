@@ -36,6 +36,7 @@ public partial class SettingsWindow : Window
 
         AutoStartCheck.IsChecked = AutoStartService.IsRegistered();
         HideFromCaptureCheck.IsChecked = s.HideFromScreenCapture == true;
+        HoverPreviewCheck.IsChecked = s.HoverPreviewEnabled != false;
 
         TwoFaTtlBox.Text    = (s.TwoFactorTtlSeconds ?? 60).ToString();
         UnpinnedTtlBox.Text = (s.UnpinnedTtlDays     ?? 0).ToString();
@@ -95,6 +96,7 @@ public partial class SettingsWindow : Window
             s.BlockedPatterns     = patterns.ToList();
             s.OpenWindowHotkey    = HotkeyParser.Format(_pendingHotkeyMods, _pendingHotkeyKey);
             s.HideFromScreenCapture = HideFromCaptureCheck.IsChecked == true;
+            s.HoverPreviewEnabled   = HoverPreviewCheck.IsChecked == true;
         });
 
         if (AutoStartCheck.IsChecked == true) AutoStartService.EnsureRegistered();

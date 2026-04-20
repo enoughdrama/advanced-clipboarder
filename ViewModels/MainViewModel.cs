@@ -70,6 +70,15 @@ public class MainViewModel : INotifyPropertyChanged
         set { if (_isCapturePaused != value) { _isCapturePaused = value; OnChanged(); ShowToast(value ? "Capture paused" : "Capture resumed"); } }
     }
 
+    // Bound from XAML via ToolTipService.IsEnabled on each card. Reloads
+    // from settings on startup and whenever the Settings window saves.
+    private bool _hoverPreviewEnabled = true;
+    public bool HoverPreviewEnabled
+    {
+        get => _hoverPreviewEnabled;
+        set { if (_hoverPreviewEnabled != value) { _hoverPreviewEnabled = value; OnChanged(); } }
+    }
+
     public int FilteredCount
     {
         get
@@ -109,6 +118,7 @@ public class MainViewModel : INotifyPropertyChanged
         var settings = SettingsStore.Load();
         _selectedCategory = Categories.FirstOrDefault(c => c.Id == settings.LastCategoryId)
                             ?? Categories[0];
+        _hoverPreviewEnabled = settings.HoverPreviewEnabled != false;
 
         var view = CollectionViewSource.GetDefaultView(Items);
         view.Filter = FilterItem;
