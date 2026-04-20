@@ -381,6 +381,19 @@ public partial class MainWindow : Window
         }
     }
 
+    // Right-click anywhere on a card opens the same transform picker the
+    // action-row button does. For Image/File clips — which have no
+    // transforms — we silently ignore the click instead of popping an
+    // empty menu, matching how the action button is hidden.
+    private void OnCardRightClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement fe) return;
+        if (fe.DataContext is not ClipItem it) return;
+        if (!it.HasTransforms) return;
+        OpenTransformMenuFor(it, anchor: null);
+        e.Handled = true;
+    }
+
     private void PasteItem(ClipItem it)
     {
         // Template clips go through the prompt-and-render pipeline before
@@ -627,22 +640,47 @@ public partial class MainWindow : Window
         }
     }
 
+    private static TransformScope ScopeFor(ClipType t) => t switch
+    {
+        ClipType.Text  => TransformScope.Text,
+        ClipType.Email => TransformScope.Email,
+        ClipType.Code  => TransformScope.Code,
+        ClipType.Link  => TransformScope.Link,
+        _              => TransformScope.None,
+    };
+
     private void BuildTextTransformMenu(ContextMenu menu, ClipItem it)
     {
-        // Group by Category, insert a header above each group. Keeps the menu
-        // walkable by eye rather than being one long undifferentiated list.
+        // Group by Category, insert a header above each group — but only
+        // include items whose Scope matches this clip's type, and skip any
+        // header that ends up with no items beneath it (e.g. Email only uses
+        // the Clean + Encode categories; don't show an empty Time header).
+        var scope = ScopeFor(it.Type);
         string? lastCategory = null;
+        bool pendingHeader = false;
+
         foreach (var entry in PasteTransforms.All)
         {
+            if ((entry.Scope & scope) == 0) continue;
+
             if (entry.Category != lastCategory)
+            {
+                // Don't commit the header until we know at least one visible
+                // item follows; keeps the "no orphan headers" invariant.
+                pendingHeader = true;
+                lastCategory = entry.Category;
+            }
+
+            if (pendingHeader)
             {
                 menu.Items.Add(new MenuItem
                 {
-                    Header = entry.Category,
+                    Header = lastCategory,
                     Style = (Style)FindResource("MenuHeader"),
                 });
-                lastCategory = entry.Category;
+                pendingHeader = false;
             }
+
             var mi = new MenuItem { Header = entry.Label };
             var captured = entry;
             mi.Click += (_, _) =>

@@ -56,14 +56,18 @@
 
     <PathGeometry x:Key="GeomSettings" Figures="M12,9 A3,3 0 1,0 12,15 A3,3 0 1,0 12,9"/>
 
-    <!-- Gear for the settings entry point. Stroked as a 12-tooth cog with a
-         hollow centre so the 1.6px stroke stays readable at 16×16. -->
-    <PathGeometry x:Key="GeomGear"
-                  Figures="M12,8 A4,4 0 1,0 12,16 A4,4 0 1,0 12,8
-                           M12,2 L12,5 M12,19 L12,22
-                           M2,12 L5,12 M19,12 L22,12
-                           M5,5 L7,7 M17,17 L19,19
-                           M19,5 L17,7 M7,17 L5,19"/>
+    <!-- Three horizontal sliders with knobs — "preferences" glyph that reads
+         as Settings far better than the ring-of-rays shape (it got mistaken
+         for a sun). Rendered stroke-only at 1.6px, so the ellipses come out
+         as hollow knobs that overlap each rail. -->
+    <GeometryGroup x:Key="GeomGear" FillRule="Nonzero">
+        <LineGeometry StartPoint="4,6"  EndPoint="20,6"/>
+        <LineGeometry StartPoint="4,12" EndPoint="20,12"/>
+        <LineGeometry StartPoint="4,18" EndPoint="20,18"/>
+        <EllipseGeometry Center="16,6"  RadiusX="2.3" RadiusY="2.3"/>
+        <EllipseGeometry Center="9,12"  RadiusX="2.3" RadiusY="2.3"/>
+        <EllipseGeometry Center="14,18" RadiusX="2.3" RadiusY="2.3"/>
+    </GeometryGroup>
 
     <!-- Swap/transform glyph: two horizontal arrows pointing opposite directions.
          Reads as "convert" without being as literal as a gear. -->

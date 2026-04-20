@@ -280,7 +280,10 @@
     </Style>
 
     <!-- Dark glass ContextMenu used for the per-card transform picker.
-         Styled to match the main window's 14px-radius / translucent surface. -->
+         Styled to match the main window's 14px-radius / translucent surface.
+         MaxHeight + ScrollViewer with a hidden scrollbar keeps the full Text
+         transform list (24 entries × 7 headers) from stretching the whole
+         vertical of the window; wheel / arrow-key scroll still works. -->
     <Style TargetType="{x:Type ContextMenu}">
         <Setter Property="Background" Value="#F0141218"/>
         <Setter Property="BorderBrush" Value="{StaticResource Line2}"/>
@@ -289,6 +292,7 @@
         <Setter Property="Foreground" Value="{StaticResource Fg0}"/>
         <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
         <Setter Property="FontSize" Value="12"/>
+        <Setter Property="MaxHeight" Value="360"/>
         <Setter Property="HasDropShadow" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -297,11 +301,17 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            Padding="{TemplateBinding Padding}">
+                            Padding="{TemplateBinding Padding}"
+                            MaxHeight="{TemplateBinding MaxHeight}">
                         <Border.Effect>
                             <DropShadowEffect BlurRadius="16" ShadowDepth="4" Color="Black" Opacity="0.5"/>
                         </Border.Effect>
-                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="False"
+                                      Focusable="False">
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </ScrollViewer>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>

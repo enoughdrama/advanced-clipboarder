@@ -71,6 +71,7 @@
                                 CornerRadius="10" SnapsToDevicePixels="True"
                                 ClipToBounds="True"
                                 MouseLeftButtonUp="OnCardLeftClick"
+                                MouseRightButtonUp="OnCardRightClick"
                                 Cursor="Hand">
                             <Border.Background>
                                 <SolidColorBrush Color="#06FFFFFF"/>
@@ -160,7 +161,8 @@
                                             <Button Style="{StaticResource IconButtonSmall}"
                                                     Click="OnTransformClick"
                                                     Tag="{Binding}"
-                                                    ToolTip="Transform &amp; paste">
+                                                    ToolTip="Transform &amp; paste"
+                                                    Visibility="{Binding HasTransforms, Converter={StaticResource BoolToVis}}">
                                                 <Path Data="{StaticResource GeomTransform}"
                                                       Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                                       StrokeThickness="1.6"

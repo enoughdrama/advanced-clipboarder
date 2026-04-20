@@ -137,6 +137,14 @@ public class ClipItem : INotifyPropertyChanged
         Type is ClipType.Text or ClipType.Code or ClipType.Email
         && TemplateEngine.IsTemplate(Content);
 
+    // Drives the Transform button's visibility on each card. Image + File
+    // clips don't have any meaningful paste-time conversion, so hide the
+    // button entirely rather than open an empty menu.
+    [JsonIgnore]
+    public bool HasTransforms =>
+        Type is ClipType.Text or ClipType.Code or ClipType.Email
+           or ClipType.Link or ClipType.Color;
+
     public void Refresh()
     {
         OnChanged(nameof(TimeAgo));

@@ -33,46 +33,69 @@ public enum TransformKind
     DedupLines,
 }
 
+// Bitmask of clip kinds a transform should appear under. Not wired to
+// ClipType directly so this file stays independent of Clipboarder.Models.
+[Flags]
+public enum TransformScope
+{
+    None  = 0,
+    Text  = 1 << 0,
+    Email = 1 << 1,
+    Code  = 1 << 2,
+    Link  = 1 << 3,
+
+    // Convenience unions used in the All[] table below.
+    TextCode     = Text | Code,
+    TextCodeLink = Text | Code | Link,
+    Any          = Text | Email | Code | Link,
+}
+
 // Pure, side-effect-free text → text conversions applied at paste time.
 // Each entry knows its own label + category so the UI can render a menu
-// without hardcoding the list twice.
+// without hardcoding the list twice. Scope filters the menu per clip type
+// — e.g. PascalCase doesn't show up for an email address, JSON prettify
+// doesn't show up for a URL.
 public static class PasteTransforms
 {
-    public readonly record struct Entry(TransformKind Kind, string Label, string Category);
+    public readonly record struct Entry(
+        TransformKind Kind,
+        string Label,
+        string Category,
+        TransformScope Scope);
 
     public static readonly IReadOnlyList<Entry> All = new Entry[]
     {
-        new(TransformKind.UpperCase,          "UPPER CASE",             "Case"),
-        new(TransformKind.LowerCase,          "lower case",             "Case"),
-        new(TransformKind.TitleCase,          "Title Case",             "Case"),
-        new(TransformKind.CamelCase,          "camelCase",              "Case"),
-        new(TransformKind.PascalCase,         "PascalCase",             "Case"),
-        new(TransformKind.SnakeCase,          "snake_case",             "Case"),
-        new(TransformKind.KebabCase,          "kebab-case",             "Case"),
+        new(TransformKind.UpperCase,          "UPPER CASE",             "Case",    TransformScope.TextCode),
+        new(TransformKind.LowerCase,          "lower case",             "Case",    TransformScope.Any),
+        new(TransformKind.TitleCase,          "Title Case",             "Case",    TransformScope.Text),
+        new(TransformKind.CamelCase,          "camelCase",              "Case",    TransformScope.TextCode),
+        new(TransformKind.PascalCase,         "PascalCase",             "Case",    TransformScope.TextCode),
+        new(TransformKind.SnakeCase,          "snake_case",             "Case",    TransformScope.TextCode),
+        new(TransformKind.KebabCase,          "kebab-case",             "Case",    TransformScope.TextCode),
 
-        new(TransformKind.Base64Encode,       "Base64 encode",          "Encode"),
-        new(TransformKind.UrlEncode,          "URL encode",             "Encode"),
+        new(TransformKind.Base64Encode,       "Base64 encode",          "Encode",  TransformScope.TextCode),
+        new(TransformKind.UrlEncode,          "URL encode",             "Encode",  TransformScope.Any),
 
-        new(TransformKind.Base64Decode,       "Base64 decode",          "Decode"),
-        new(TransformKind.UrlDecode,          "URL decode",             "Decode"),
-        new(TransformKind.HtmlDecode,         "HTML decode",            "Decode"),
+        new(TransformKind.Base64Decode,       "Base64 decode",          "Decode",  TransformScope.TextCode),
+        new(TransformKind.UrlDecode,          "URL decode",             "Decode",  TransformScope.TextCodeLink),
+        new(TransformKind.HtmlDecode,         "HTML decode",            "Decode",  TransformScope.TextCode),
 
-        new(TransformKind.JsonPrettify,       "JSON prettify",          "Format"),
-        new(TransformKind.JsonMinify,         "JSON minify",            "Format"),
+        new(TransformKind.JsonPrettify,       "JSON prettify",          "Format",  TransformScope.TextCode),
+        new(TransformKind.JsonMinify,         "JSON minify",            "Format",  TransformScope.TextCode),
 
-        new(TransformKind.UnixToDate,         "Unix → date",            "Time"),
-        new(TransformKind.DateToUnix,         "Date → Unix",            "Time"),
+        new(TransformKind.UnixToDate,         "Unix → date",            "Time",    TransformScope.TextCode),
+        new(TransformKind.DateToUnix,         "Date → Unix",            "Time",    TransformScope.TextCode),
 
-        new(TransformKind.Trim,               "Trim",                   "Clean"),
-        new(TransformKind.NormalizeWhitespace,"Normalize whitespace",   "Clean"),
-        new(TransformKind.SmartQuotesToAscii, "Smart quotes → ASCII",   "Clean"),
+        new(TransformKind.Trim,               "Trim",                   "Clean",   TransformScope.Any),
+        new(TransformKind.NormalizeWhitespace,"Normalize whitespace",   "Clean",   TransformScope.TextCode),
+        new(TransformKind.SmartQuotesToAscii, "Smart quotes → ASCII",   "Clean",   TransformScope.TextCode),
 
-        new(TransformKind.DecimalToHex,       "Decimal → hex",          "Convert"),
-        new(TransformKind.HexToDecimal,       "Hex → decimal",          "Convert"),
+        new(TransformKind.DecimalToHex,       "Decimal → hex",          "Convert", TransformScope.TextCode),
+        new(TransformKind.HexToDecimal,       "Hex → decimal",          "Convert", TransformScope.TextCode),
 
-        new(TransformKind.SortLines,          "Sort lines",             "Lines"),
-        new(TransformKind.ReverseLines,       "Reverse lines",          "Lines"),
-        new(TransformKind.DedupLines,         "Dedup lines",            "Lines"),
+        new(TransformKind.SortLines,          "Sort lines",             "Lines",   TransformScope.TextCode),
+        new(TransformKind.ReverseLines,       "Reverse lines",          "Lines",   TransformScope.TextCode),
+        new(TransformKind.DedupLines,         "Dedup lines",            "Lines",   TransformScope.TextCode),
     };
 
     public static string Apply(TransformKind kind, string input)
