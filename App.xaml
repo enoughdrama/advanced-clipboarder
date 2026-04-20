@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="Styles/Icons.xaml"/>
                 <ResourceDictionary Source="Styles/Controls.xaml"/>
                 <ResourceDictionary Source="Templates/CardTemplates.xaml"/>
+                <ResourceDictionary Source="Templates/HoverPreviewTemplates.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

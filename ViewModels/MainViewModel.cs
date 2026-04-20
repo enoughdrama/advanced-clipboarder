@@ -16,10 +16,21 @@ public class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<CategoryRowVM> Categories { get; }
 
     private string _query = "";
+    // Cached parse of _query — rebuilt once per edit so each FilterItem call
+    // doesn't re-tokenise the whole search string per item.
+    private SearchQuery? _parsedQuery;
     public string Query
     {
         get => _query;
-        set { if (_query != value) { _query = value; OnChanged(); ItemsView.Refresh(); UpdateCounts(); } }
+        set
+        {
+            if (_query == value) return;
+            _query = value;
+            _parsedQuery = null;
+            OnChanged();
+            ItemsView.Refresh();
+            UpdateCounts();
+        }
     }
 
     private CategoryRowVM _selectedCategory = null!;
@@ -215,12 +226,27 @@ public class MainViewModel : INotifyPropertyChanged
         if (!SelectedCategory.Category.Match(it)) return false;
         if (string.IsNullOrWhiteSpace(_query)) return true;
 
-        var (cutoff, text) = TimeRangeParser.Parse(_query);
-        if (cutoff is not null && it.Timestamp < cutoff.Value) return false;
-        if (string.IsNullOrEmpty(text)) return true;
+        var q = _parsedQuery ??= SearchParser.Parse(_query);
 
-        return it.Content.Contains(text, StringComparison.OrdinalIgnoreCase)
-            || it.Source.Contains(text, StringComparison.OrdinalIgnoreCase);
+        if (q.Cutoff is not null && it.Timestamp < q.Cutoff.Value) return false;
+        if (q.Type is not null && it.Type != q.Type.Value) return false;
+        if (q.Lang is not null
+            && !string.Equals(it.Lang ?? "", q.Lang, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (q.Source is not null
+            && !it.Source.Contains(q.Source, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        foreach (var excl in q.Excludes)
+        {
+            if (it.Content.Contains(excl, StringComparison.OrdinalIgnoreCase)
+                || it.Source.Contains(excl, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+
+        if (string.IsNullOrEmpty(q.Text)) return true;
+        return it.Content.Contains(q.Text, StringComparison.OrdinalIgnoreCase)
+            || it.Source.Contains(q.Text, StringComparison.OrdinalIgnoreCase);
     }
 
     public void UpdateCounts()

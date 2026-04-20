@@ -1,0 +1,120 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:Clipboarder.Converters">
+
+    <conv:HexToBrushConverter            x:Key="HP_HexToBrush"/>
+    <conv:PathToBigImageConverter        x:Key="HP_PathToBigImage"/>
+    <conv:ContrastRatioConverter         x:Key="HP_Contrast"/>
+    <conv:UrlHostConverter               x:Key="HP_UrlHost"/>
+    <conv:UrlPathConverter               x:Key="HP_UrlPath"/>
+    <conv:UrlQueryPartsConverter         x:Key="HP_UrlParts"/>
+    <conv:Base64DecodePreviewConverter   x:Key="HP_Base64"/>
+    <conv:Base64VisibilityConverter      x:Key="HP_Base64Vis"/>
+
+    <DataTemplate x:Key="Preview_Color">
+        <StackPanel Orientation="Horizontal">
+            <Border Width="84" Height="84" CornerRadius="12"
+                    Background="{Binding Content, Converter={StaticResource HP_HexToBrush}}"
+                    BorderBrush="#26FFFFFF" BorderThickness="1"/>
+            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center" MinWidth="180">
+                <TextBlock Text="{Binding Content}"
+                           Foreground="{StaticResource Fg0}"
+                           FontFamily="{StaticResource MonoFont}"
+                           FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Content, Converter={StaticResource HP_Contrast}}"
+                           Foreground="{StaticResource Fg2}"
+                           FontFamily="{StaticResource MonoFont}" FontSize="11"
+                           Margin="0,6,0,0" TextWrapping="Wrap" MaxWidth="260"/>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="Preview_Image">
+        <StackPanel>
+            <Border CornerRadius="8" BorderBrush="{StaticResource Line}" BorderThickness="1"
+                    ClipToBounds="True" MaxWidth="480" MaxHeight="340">
+                <Image Source="{Binding Content, Converter={StaticResource HP_PathToBigImage}}"
+                       Stretch="Uniform"
+                       RenderOptions.BitmapScalingMode="Fant"/>
+            </Border>
+            <TextBlock Foreground="{StaticResource Fg3}"
+                       FontFamily="{StaticResource MonoFont}" FontSize="11"
+                       Margin="0,6,0,0">
+                <Run Text="{Binding Width}"/><Run Text="×"/><Run Text="{Binding Height}"/>
+                <Run Text="  ·  "/><Run Text="{Binding FileSize}"/>
+            </TextBlock>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="Preview_Link">
+        <StackPanel MaxWidth="460">
+            <TextBlock Text="{Binding Content, Converter={StaticResource HP_UrlHost}}"
+                       Foreground="{StaticResource Fg0}"
+                       FontFamily="{StaticResource MonoFont}"
+                       FontSize="14" FontWeight="SemiBold"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding Content, Converter={StaticResource HP_UrlPath}}"
+                       Foreground="{StaticResource Fg2}"
+                       FontFamily="{StaticResource MonoFont}" FontSize="12"
+                       Margin="0,4,0,0" TextWrapping="Wrap" MaxHeight="60"
+                       TextTrimming="CharacterEllipsis"/>
+            <ItemsControl ItemsSource="{Binding Content, Converter={StaticResource HP_UrlParts}}"
+                          Margin="0,8,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0,1">
+                            <TextBlock Text="{Binding Key}"
+                                       Foreground="{StaticResource Fg3}"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="11"/>
+                            <TextBlock Text=" = "
+                                       Foreground="{StaticResource Fg3}"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="11"/>
+                            <TextBlock Text="{Binding Value}"
+                                       Foreground="{StaticResource Fg1}"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="340"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="Preview_Json">
+        <Border CornerRadius="6" Background="#33000000" Padding="10,8"
+                MaxWidth="520" MaxHeight="340">
+            <TextBlock Text="{Binding Content}"
+                       Foreground="{StaticResource Fg0}"
+                       FontFamily="{StaticResource MonoFont}" FontSize="12"
+                       TextWrapping="NoWrap"
+                       TextTrimming="CharacterEllipsis"/>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="Preview_Default">
+        <StackPanel MaxWidth="520">
+            <TextBlock Text="{Binding Content}"
+                       Foreground="{StaticResource Fg0}"
+                       FontFamily="{StaticResource MonoFont}" FontSize="12"
+                       TextWrapping="Wrap" MaxHeight="300"
+                       TextTrimming="CharacterEllipsis"/>
+            <Border Margin="0,10,0,0" Padding="10,8"
+                    CornerRadius="6" Background="#26FFFFFF"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1"
+                    Visibility="{Binding Content, Converter={StaticResource HP_Base64Vis}}">
+                <StackPanel>
+                    <TextBlock Text="BASE64 DECODED"
+                               Foreground="{StaticResource Fg3}"
+                               FontSize="10" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Content, Converter={StaticResource HP_Base64}}"
+                               Foreground="{StaticResource Fg1}"
+                               FontFamily="{StaticResource MonoFont}" FontSize="11"
+                               Margin="0,4,0,0"
+                               TextWrapping="Wrap" MaxHeight="100"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </DataTemplate>
+
+</ResourceDictionary>

@@ -34,6 +34,40 @@
             FileTemplate="{StaticResource CardBody_File}"
             BigTemplate="{StaticResource CardBody_Big}"/>
 
+        <tmpl:HoverPreviewSelector x:Key="HoverPreviewSelector"
+            ColorTemplate="{StaticResource Preview_Color}"
+            ImageTemplate="{StaticResource Preview_Image}"
+            LinkTemplate="{StaticResource Preview_Link}"
+            JsonTemplate="{StaticResource Preview_Json}"
+            DefaultTemplate="{StaticResource Preview_Default}"/>
+
+        <Style x:Key="HoverPreviewTooltip" TargetType="ToolTip">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HasDropShadow" Value="False"/>
+            <Setter Property="Placement" Value="Right"/>
+            <Setter Property="HorizontalOffset" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border CornerRadius="10"
+                                Background="#F0141218"
+                                BorderBrush="{StaticResource Line2}"
+                                BorderThickness="1"
+                                Padding="14,12"
+                                SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" ShadowDepth="6"
+                                                  Color="Black" Opacity="0.5"/>
+                            </Border.Effect>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              ContentTemplateSelector="{StaticResource HoverPreviewSelector}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="RailIconPath" TargetType="Path">
             <Setter Property="Stroke" Value="{StaticResource Fg1}"/>
             <Setter Property="StrokeThickness" Value="1.6"/>
@@ -72,7 +106,15 @@
                                 ClipToBounds="True"
                                 MouseLeftButtonUp="OnCardLeftClick"
                                 MouseRightButtonUp="OnCardRightClick"
-                                Cursor="Hand">
+                                Cursor="Hand"
+                                ToolTipService.InitialShowDelay="350"
+                                ToolTipService.ShowDuration="60000"
+                                ToolTipService.Placement="Right"
+                                ToolTipService.HorizontalOffset="8">
+                            <Border.ToolTip>
+                                <ToolTip Style="{StaticResource HoverPreviewTooltip}"
+                                         Content="{Binding}"/>
+                            </Border.ToolTip>
                             <Border.Background>
                                 <SolidColorBrush Color="#06FFFFFF"/>
                             </Border.Background>
@@ -599,7 +641,7 @@
                                                  Style="{StaticResource SearchBox}"
                                                  Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
                                                  VerticalAlignment="Center"/>
-                                        <TextBlock Text="Search · type, source, content, &gt;today / &gt;week / &gt;3d"
+                                        <TextBlock Text="Search · &gt;today · source:vscode · lang:py · type:url · !exclude"
                                                    Foreground="{StaticResource Fg3}"
                                                    FontSize="13" IsHitTestVisible="False"
                                                    VerticalAlignment="Center" Margin="2,0,0,0">
