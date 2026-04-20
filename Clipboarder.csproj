@@ -16,7 +16,7 @@
     <!-- Single source of truth for the version. Must match the GitHub release tag
          (without the leading "v") so UpdateService can compare correctly. -->
     <Version>0.1.9</Version>
-    <AssemblyTitle>Advanced Clipboarder</AssemblyTitle>
+    <AssemblyTitle>Clipboarder</AssemblyTitle>
     <Product>Advanced Clipboarder</Product>
     <Company>enoughdrama</Company>
   </PropertyGroup>

@@ -5,7 +5,7 @@
         xmlns:conv="clr-namespace:Clipboarder.Converters"
         xmlns:tmpl="clr-namespace:Clipboarder.Templates"
         xmlns:m="clr-namespace:Clipboarder.Models"
-        Title="Clipboard"
+        Title="Clipboarder"
         Icon="pack://application:,,,/assets/icon.ico"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
