@@ -42,7 +42,6 @@ Every time you copy something, Advanced Clipboarder snapshots it — text, code,
 - **Persistent history** — debounced writes, survives restarts
 - **Single-instance + tray** — second launch just re-opens the window
 - **Keyboard everything** — `Esc` to hide, `Ctrl+P` to pin, `Ctrl+T` to transform, `Ctrl+,` for settings
-- **Native WPF, no Electron** — ~40 MB install, instant cold start
 
 ## Keyboard shortcuts
 
