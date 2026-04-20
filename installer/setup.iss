@@ -5,7 +5,7 @@
 
 #define AppName        "Advanced Clipboarder"
 #define AppShortName   "Clipboarder"
-#define AppVersion     "0.1.12"
+#define AppVersion     "0.1.13"
 #define AppPublisher   "enoughdrama"
 #define AppURL         "https://github.com/enoughdrama/advanced-clipboarder"
 #define AppExeName     "Clipboarder.exe"
