@@ -651,45 +651,46 @@ public partial class MainWindow : Window
 
     private void BuildTextTransformMenu(ContextMenu menu, ClipItem it)
     {
-        // Group by Category, insert a header above each group — but only
-        // include items whose Scope matches this clip's type, and skip any
-        // header that ends up with no items beneath it (e.g. Email only uses
-        // the Clean + Encode categories; don't show an empty Time header).
+        // The menu is two-level: top row = category (Case, Encode, Decode, ...);
+        // each category expands into a submenu with the actual transforms.
+        // Keeps the visible list compact no matter how many text transforms
+        // exist. Entries whose Scope or Lang don't match are filtered out
+        // first, so a category that ends up empty is never emitted.
         var scope = ScopeFor(it.Type);
-        string? lastCategory = null;
-        bool pendingHeader = false;
+        var groups = PasteTransforms.All
+            .Where(e => (e.Scope & scope) != 0 && PasteTransforms.LangMatches(e, it.Lang))
+            .GroupBy(e => e.Category, StringComparer.Ordinal);
 
-        foreach (var entry in PasteTransforms.All)
+        foreach (var group in groups)
         {
-            if ((entry.Scope & scope) == 0) continue;
+            var items = group.ToList();
 
-            if (entry.Category != lastCategory)
+            if (items.Count == 1)
             {
-                // Don't commit the header until we know at least one visible
-                // item follows; keeps the "no orphan headers" invariant.
-                pendingHeader = true;
-                lastCategory = entry.Category;
+                // Single-entry category: no point making the user click through
+                // a submenu that holds one thing — promote it to the root level.
+                menu.Items.Add(BuildTransformMenuItem(items[0], it));
             }
-
-            if (pendingHeader)
+            else
             {
-                menu.Items.Add(new MenuItem
-                {
-                    Header = lastCategory,
-                    Style = (Style)FindResource("MenuHeader"),
-                });
-                pendingHeader = false;
+                var parent = new MenuItem { Header = group.Key };
+                foreach (var entry in items)
+                    parent.Items.Add(BuildTransformMenuItem(entry, it));
+                menu.Items.Add(parent);
             }
-
-            var mi = new MenuItem { Header = entry.Label };
-            var captured = entry;
-            mi.Click += (_, _) =>
-            {
-                var transformed = PasteTransforms.Apply(captured.Kind, it.Content);
-                PasteRawText(it, transformed);
-            };
-            menu.Items.Add(mi);
         }
+    }
+
+    private MenuItem BuildTransformMenuItem(PasteTransforms.Entry entry, ClipItem it)
+    {
+        var mi = new MenuItem { Header = entry.Label };
+        var captured = entry;
+        mi.Click += (_, _) =>
+        {
+            var transformed = PasteTransforms.Apply(captured.Kind, it.Content);
+            PasteRawText(it, transformed);
+        };
+        return mi;
     }
 
     private ClipItem? FirstVisibleItem()

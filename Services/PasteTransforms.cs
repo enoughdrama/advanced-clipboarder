@@ -57,11 +57,18 @@ public enum TransformScope
 // doesn't show up for a URL.
 public static class PasteTransforms
 {
+    // Langs narrows Scope.Code further to specific CodeDetector lang tags
+    // (JSON prettify only for Lang="json", HTML decode only for html/xml).
+    // null = no narrowing beyond Scope. Ignored for non-Code scopes.
     public readonly record struct Entry(
         TransformKind Kind,
         string Label,
         string Category,
-        TransformScope Scope);
+        TransformScope Scope,
+        string[]? Langs = null);
+
+    private static readonly string[] LangsJson = { "json" };
+    private static readonly string[] LangsMarkup = { "html", "xml" };
 
     public static readonly IReadOnlyList<Entry> All = new Entry[]
     {
@@ -78,10 +85,10 @@ public static class PasteTransforms
 
         new(TransformKind.Base64Decode,       "Base64 decode",          "Decode",  TransformScope.TextCode),
         new(TransformKind.UrlDecode,          "URL decode",             "Decode",  TransformScope.TextCodeLink),
-        new(TransformKind.HtmlDecode,         "HTML decode",            "Decode",  TransformScope.TextCode),
+        new(TransformKind.HtmlDecode,         "HTML decode",            "Decode",  TransformScope.Code,     LangsMarkup),
 
-        new(TransformKind.JsonPrettify,       "JSON prettify",          "Format",  TransformScope.TextCode),
-        new(TransformKind.JsonMinify,         "JSON minify",            "Format",  TransformScope.TextCode),
+        new(TransformKind.JsonPrettify,       "JSON prettify",          "Format",  TransformScope.Code,     LangsJson),
+        new(TransformKind.JsonMinify,         "JSON minify",            "Format",  TransformScope.Code,     LangsJson),
 
         new(TransformKind.UnixToDate,         "Unix → date",            "Time",    TransformScope.TextCode),
         new(TransformKind.DateToUnix,         "Date → Unix",            "Time",    TransformScope.TextCode),
@@ -90,13 +97,23 @@ public static class PasteTransforms
         new(TransformKind.NormalizeWhitespace,"Normalize whitespace",   "Clean",   TransformScope.TextCode),
         new(TransformKind.SmartQuotesToAscii, "Smart quotes → ASCII",   "Clean",   TransformScope.TextCode),
 
-        new(TransformKind.DecimalToHex,       "Decimal → hex",          "Convert", TransformScope.TextCode),
-        new(TransformKind.HexToDecimal,       "Hex → decimal",          "Convert", TransformScope.TextCode),
+        new(TransformKind.DecimalToHex,       "Decimal → hex",          "Convert", TransformScope.Code),
+        new(TransformKind.HexToDecimal,       "Hex → decimal",          "Convert", TransformScope.Code),
 
         new(TransformKind.SortLines,          "Sort lines",             "Lines",   TransformScope.TextCode),
         new(TransformKind.ReverseLines,       "Reverse lines",          "Lines",   TransformScope.TextCode),
         new(TransformKind.DedupLines,         "Dedup lines",            "Lines",   TransformScope.TextCode),
     };
+
+    public static bool LangMatches(Entry entry, string? clipLang)
+    {
+        if (entry.Langs is null) return true;
+        if (string.IsNullOrEmpty(clipLang)) return false;
+        foreach (var l in entry.Langs)
+            if (string.Equals(l, clipLang, StringComparison.OrdinalIgnoreCase))
+                return true;
+        return false;
+    }
 
     public static string Apply(TransformKind kind, string input)
     {
