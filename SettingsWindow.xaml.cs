@@ -2,20 +2,31 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Clipboarder.Services;
 
 namespace Clipboarder;
 
 public partial class SettingsWindow : Window
 {
+    private const string DefaultHotkey = "Ctrl+Shift+V";
+
     // Compiled once per edit — we recompile the pattern list whenever the
     // user types in the Patterns box so the live tester reflects the in-flight
     // state, not what's currently saved.
     private IReadOnlyList<Regex> _compiledPatterns = Array.Empty<Regex>();
 
+    // Hotkey recorder state. We don't write directly into settings on every
+    // keystroke — the user might be mid-combo when they change their mind.
+    // Commit on Save; Esc reverts, Backspace resets to default.
+    private bool _recordingHotkey;
+    private ModifierKeys _pendingHotkeyMods = ModifierKeys.Control | ModifierKeys.Shift;
+    private Key _pendingHotkeyKey = Key.V;
+
     public SettingsWindow()
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => PrivacyService.ApplyFromSettings(this);
         Load();
     }
 
@@ -24,6 +35,7 @@ public partial class SettingsWindow : Window
         var s = SettingsStore.Load();
 
         AutoStartCheck.IsChecked = AutoStartService.IsRegistered();
+        HideFromCaptureCheck.IsChecked = s.HideFromScreenCapture == true;
 
         TwoFaTtlBox.Text    = (s.TwoFactorTtlSeconds ?? 60).ToString();
         UnpinnedTtlBox.Text = (s.UnpinnedTtlDays     ?? 0).ToString();
@@ -31,6 +43,13 @@ public partial class SettingsWindow : Window
 
         ProcessesBox.Text = JoinLines(s.BlockedProcesses ?? CaptureRules.DefaultBlockedProcesses);
         PatternsBox.Text  = JoinLines(s.BlockedPatterns  ?? CaptureRules.DefaultBlockedPatterns);
+
+        if (HotkeyParser.TryParse(s.OpenWindowHotkey, out var hm, out var hk))
+        {
+            _pendingHotkeyMods = hm;
+            _pendingHotkeyKey  = hk;
+        }
+        HotkeyText.Text = HotkeyParser.Format(_pendingHotkeyMods, _pendingHotkeyKey);
 
         VersionText.Text = "Advanced Clipboarder v" + AppVersion();
 
@@ -74,6 +93,8 @@ public partial class SettingsWindow : Window
             s.MaxUnpinnedItems    = ParseInt(MaxUnpinnedBox.Text, 0);
             s.BlockedProcesses    = processes.ToList();
             s.BlockedPatterns     = patterns.ToList();
+            s.OpenWindowHotkey    = HotkeyParser.Format(_pendingHotkeyMods, _pendingHotkeyKey);
+            s.HideFromScreenCapture = HideFromCaptureCheck.IsChecked == true;
         });
 
         if (AutoStartCheck.IsChecked == true) AutoStartService.EnsureRegistered();
@@ -183,4 +204,81 @@ public partial class SettingsWindow : Window
     {
         if (e.ChangedButton == MouseButton.Left) DragMove();
     }
+
+    private void OnHotkeyClick(object sender, MouseButtonEventArgs e)
+    {
+        HotkeyBox.Focus();
+        BeginRecording();
+        e.Handled = true;
+    }
+
+    private void BeginRecording()
+    {
+        _recordingHotkey = true;
+        HotkeyText.Text = "Press keys…";
+        HotkeyBox.BorderBrush = (Brush)FindResource("Accent");
+    }
+
+    private void StopRecording()
+    {
+        _recordingHotkey = false;
+        HotkeyText.Text = HotkeyParser.Format(_pendingHotkeyMods, _pendingHotkeyKey);
+        HotkeyBox.BorderBrush = new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
+    }
+
+    private void OnHotkeyKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!_recordingHotkey) return;
+
+        // When Alt is held, WPF routes the combo through SystemKey.
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        // Escape reverts to whatever was showing before recording started.
+        if (key == Key.Escape)
+        {
+            StopRecording();
+            e.Handled = true;
+            return;
+        }
+
+        // Backspace alone resets to the built-in default so the user can
+        // bail out of a bad combo without having to remember the old one.
+        if (key == Key.Back && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            HotkeyParser.TryParse(DefaultHotkey, out _pendingHotkeyMods, out _pendingHotkeyKey);
+            StopRecording();
+            e.Handled = true;
+            return;
+        }
+
+        // Ignore the moment the user is still pressing only modifiers —
+        // we want to see the non-modifier key they pair with them.
+        if (IsPureModifier(key))
+        {
+            HotkeyText.Text = HotkeyParser.Format(Keyboard.Modifiers, Key.None) + "+…";
+            e.Handled = true;
+            return;
+        }
+
+        var mods = Keyboard.Modifiers;
+        if (mods == ModifierKeys.None)
+        {
+            // Unmodified key — global hotkeys must carry a modifier or they
+            // steal a keystroke from every app on the system.
+            HotkeyText.Text = "Add a modifier (Ctrl / Shift / Alt / Win)";
+            e.Handled = true;
+            return;
+        }
+
+        _pendingHotkeyMods = mods;
+        _pendingHotkeyKey  = key;
+        StopRecording();
+        e.Handled = true;
+    }
+
+    private static bool IsPureModifier(Key k) => k is
+        Key.LeftCtrl or Key.RightCtrl
+        or Key.LeftShift or Key.RightShift
+        or Key.LeftAlt  or Key.RightAlt
+        or Key.LWin     or Key.RWin;
 }

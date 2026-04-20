@@ -33,6 +33,16 @@ public sealed class AppSettings
     public int? TwoFactorTtlSeconds { get; set; }
     public int? UnpinnedTtlDays     { get; set; }
     public int? MaxUnpinnedItems    { get; set; }
+
+    // Global hotkey string ("Ctrl+Shift+V"). Parsed via HotkeyParser. Null =
+    // use the built-in default, anything else is treated as the user's intent.
+    public string? OpenWindowHotkey { get; set; }
+
+    // When true, the app's windows are excluded from screen-capture surfaces
+    // (Teams / Zoom / OBS / GDI screenshots see a black rectangle). Opt-in
+    // — users who need to screenshot the app for a bug report won't expect
+    // it on by default. Null hydrates to false.
+    public bool? HideFromScreenCapture { get; set; }
 }
 
 public static class SettingsStore
@@ -75,6 +85,8 @@ public static class SettingsStore
         if (s.TwoFactorTtlSeconds is null) { s.TwoFactorTtlSeconds = 60; dirty = true; }
         if (s.UnpinnedTtlDays     is null) { s.UnpinnedTtlDays     = 0;  dirty = true; }
         if (s.MaxUnpinnedItems    is null) { s.MaxUnpinnedItems    = 0;  dirty = true; }
+        if (s.OpenWindowHotkey    is null) { s.OpenWindowHotkey    = "Ctrl+Shift+V"; dirty = true; }
+        if (s.HideFromScreenCapture is null) { s.HideFromScreenCapture = false; dirty = true; }
         return dirty;
     }
 

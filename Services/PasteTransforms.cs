@@ -31,6 +31,7 @@ public enum TransformKind
     SortLines,
     ReverseLines,
     DedupLines,
+    StripUrlTrackers,
 }
 
 // Bitmask of clip kinds a transform should appear under. Not wired to
@@ -103,6 +104,8 @@ public static class PasteTransforms
         new(TransformKind.SortLines,          "Sort lines",             "Lines",   TransformScope.TextCode),
         new(TransformKind.ReverseLines,       "Reverse lines",          "Lines",   TransformScope.TextCode),
         new(TransformKind.DedupLines,         "Dedup lines",            "Lines",   TransformScope.TextCode),
+
+        new(TransformKind.StripUrlTrackers,   "Strip trackers",         "URL",     TransformScope.Link),
     };
 
     public static bool LangMatches(Entry entry, string? clipLang)
@@ -146,6 +149,7 @@ public static class PasteTransforms
                 TransformKind.SortLines           => string.Join("\n", SplitLines(input).OrderBy(x => x, StringComparer.Ordinal)),
                 TransformKind.ReverseLines        => string.Join("\n", SplitLines(input).Reverse()),
                 TransformKind.DedupLines          => string.Join("\n", SplitLines(input).Distinct()),
+                TransformKind.StripUrlTrackers    => UrlCleaner.Clean(input),
                 _ => input,
             };
         }

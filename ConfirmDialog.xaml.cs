@@ -18,6 +18,7 @@ public partial class ConfirmDialog : Window
                          ConfirmKind kind = ConfirmKind.Destructive)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => Services.PrivacyService.ApplyFromSettings(this);
         TitleText.Text = title;
         MessageText.Text = message;
         ConfirmBtn.Content = confirmLabel;

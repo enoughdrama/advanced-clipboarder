@@ -214,9 +214,13 @@ public class MainViewModel : INotifyPropertyChanged
         if (o is not ClipItem it) return false;
         if (!SelectedCategory.Category.Match(it)) return false;
         if (string.IsNullOrWhiteSpace(_query)) return true;
-        var q = _query.Trim();
-        return it.Content.Contains(q, StringComparison.OrdinalIgnoreCase)
-            || it.Source.Contains(q, StringComparison.OrdinalIgnoreCase);
+
+        var (cutoff, text) = TimeRangeParser.Parse(_query);
+        if (cutoff is not null && it.Timestamp < cutoff.Value) return false;
+        if (string.IsNullOrEmpty(text)) return true;
+
+        return it.Content.Contains(text, StringComparison.OrdinalIgnoreCase)
+            || it.Source.Contains(text, StringComparison.OrdinalIgnoreCase);
     }
 
     public void UpdateCounts()

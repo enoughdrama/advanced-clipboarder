@@ -599,7 +599,7 @@
                                                  Style="{StaticResource SearchBox}"
                                                  Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
                                                  VerticalAlignment="Center"/>
-                                        <TextBlock Text="Search clipboard · paste type, source, content…"
+                                        <TextBlock Text="Search · type, source, content, &gt;today / &gt;week / &gt;3d"
                                                    Foreground="{StaticResource Fg3}"
                                                    FontSize="13" IsHitTestVisible="False"
                                                    VerticalAlignment="Center" Margin="2,0,0,0">

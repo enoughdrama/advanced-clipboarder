@@ -28,6 +28,7 @@ public partial class PromptDialog : Window
     public PromptDialog(IEnumerable<string> labels)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => Services.PrivacyService.ApplyFromSettings(this);
         foreach (var l in labels) Fields.Add(new Field { Label = l });
         FieldsHost.ItemsSource = Fields;
     }

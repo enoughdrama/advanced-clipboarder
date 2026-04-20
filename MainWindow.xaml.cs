@@ -66,8 +66,11 @@ public partial class MainWindow : Window
 
         try
         {
-            _hotkey = new HotkeyService(this, ModifierKeys.Control | ModifierKeys.Shift, Key.V);
+            var (mods, key) = ReadHotkeyFromSettings();
+            _hotkey = new HotkeyService(this, mods, key);
             _hotkey.Pressed += OnHotkeyPressed;
+            if (!_hotkey.IsRegistered)
+                VM.ShowToastMessage($"Hotkey {HotkeyParser.Format(mods, key)} unavailable");
         }
         catch { }
 
@@ -76,11 +79,37 @@ public partial class MainWindow : Window
         try { _lastClipboardText = Clipboard.ContainsText() ? Clipboard.GetText() : null; } catch { }
 
         ReloadCaptureRules();
+        PrivacyService.ApplyFromSettings(this);
 
         // Keep the in-memory blocklist / pattern regexes in sync with the
         // Settings window — without this the user's new rules only apply
         // after a full app restart.
-        SettingsWindow.SettingsSaved += (_, _) => ReloadCaptureRules();
+        SettingsWindow.SettingsSaved += (_, _) =>
+        {
+            ReloadCaptureRules();
+            RebindHotkeyFromSettings();
+            PrivacyService.ApplyFromSettings(this);
+        };
+    }
+
+    private static (ModifierKeys mods, Key key) ReadHotkeyFromSettings()
+    {
+        var raw = SettingsStore.Load().OpenWindowHotkey;
+        if (HotkeyParser.TryParse(raw, out var m, out var k))
+            return (m, k);
+        return (ModifierKeys.Control | ModifierKeys.Shift, Key.V);
+    }
+
+    // Re-registers the global hotkey from the latest settings value. Called
+    // when the Settings window saves. If Windows refuses the new combo (the
+    // old one might already be re-assigned by another app), we surface the
+    // failure as a toast rather than silently leaving the hotkey dead.
+    private void RebindHotkeyFromSettings()
+    {
+        if (_hotkey is null) return;
+        var (mods, key) = ReadHotkeyFromSettings();
+        var ok = _hotkey.Rebind(mods, key);
+        if (!ok) VM.ShowToastMessage($"Hotkey {HotkeyParser.Format(mods, key)} unavailable");
     }
 
     private void ReloadCaptureRules()

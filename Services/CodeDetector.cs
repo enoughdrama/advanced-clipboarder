@@ -20,7 +20,6 @@ public static class CodeDetector
         var t = text.Trim();
         if (t.Length < 2) return default;
 
-        // ---- 1. Definitive signatures ----------------------------------------------------
         if (t.StartsWith("#!"))
         {
             var line1 = t.Split('\n', 2)[0];
@@ -51,7 +50,6 @@ public static class CodeDetector
         // Single-line terminal command (git/npm/docker/ssh/etc.)
         if (IsSingleLineShellCommand(t)) return new(true, "sh");
 
-        // ---- 2. Weighted per-language scoring --------------------------------------------
         var s = new Dictionary<string, int>(StringComparer.Ordinal);
         ScoreJs(t, s);
         ScoreTs(t, s);
@@ -83,13 +81,10 @@ public static class CodeDetector
                       .FirstOrDefault();
         if (winner.Value >= LanguageThreshold) return new(true, winner.Key);
 
-        // ---- 3. Generic code fallback ---------------------------------------------------
         if (GenericCodeScore(t) >= GenericThreshold) return new(true, "txt");
 
         return default;
     }
-
-    // ============ strong-signature helpers ============
 
     private static bool LooksLikeJson(string t)
     {
@@ -132,9 +127,8 @@ public static class CodeDetector
         return Regex.IsMatch(t, @"^\s*(sudo\s+)?(git|npm|yarn|pnpm|bun|deno|npx|node|python3?|py|pip3?|pipx|poetry|uv|cargo|rustc|rustup|go|gofmt|mvn|gradle|dotnet|msbuild|adb|docker|docker-compose|podman|kubectl|helm|terraform|tf|aws|gcloud|az|heroku|vercel|netlify|ssh|scp|rsync|curl|wget|ping|netstat|ss|ip|ifconfig|traceroute|nmap|tar|zip|unzip|gzip|gunzip|bzip2|xz|apt|apt-get|yum|dnf|pacman|brew|choco|winget|scoop|systemctl|service|journalctl|ps|top|htop|kill|killall|nohup|bg|fg|jobs|cd|ls|dir|pwd|mkdir|rmdir|rm|cp|mv|ln|cat|less|more|head|tail|grep|egrep|fgrep|awk|sed|sort|uniq|cut|tr|wc|diff|patch|chmod|chown|chgrp|touch|stat|file|which|whereis|locate|find|xargs|tee|echo|printf|export|source|alias|history|clear|make|cmake|ninja|gcc|g\+\+|clang|javac|java)\b");
     }
 
-    // ============ per-language scorers ============
-    // Each function adds up signals unique-to-shared; threshold above filters noise.
-
+    // Each per-language scorer adds up signals unique-to-shared; the threshold
+    // at the top of Detect filters out noise.
     private static void ScoreJs(string t, Dictionary<string, int> s)
     {
         int score = 0;
@@ -449,10 +443,10 @@ public static class CodeDetector
         s["scala"] = score;
     }
 
-    // ============ generic code fallback ============
-    // Only programming-specific signals — punctuation patterns, operators, and structures
-    // that are extremely rare in natural-language prose. Each group contributes modestly
-    // so the threshold is only reached when several independent code-like features overlap.
+    // Programming-only signals — punctuation patterns, operators, and structures
+    // that are extremely rare in natural-language prose. Each group contributes
+    // modestly so the threshold is only reached when several independent code-like
+    // features overlap.
     private static int GenericCodeScore(string t)
     {
         int score = 0;
@@ -487,8 +481,6 @@ public static class CodeDetector
 
         return score;
     }
-
-    // ============ tiny helpers ============
 
     private const RegexOptions Multi = RegexOptions.Multiline;
 

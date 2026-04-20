@@ -83,8 +83,53 @@
                                       Margin="0,0,0,6"/>
                             <TextBlock Text="Launches Clipboarder to the tray when you sign in."
                                        Foreground="{StaticResource Fg3}"
-                                       FontSize="12" Margin="22,-2,0,0"/>
+                                       FontSize="12" Margin="22,-2,0,12"/>
+
+                            <CheckBox x:Name="HideFromCaptureCheck"
+                                      Style="{StaticResource SettingCheck}"
+                                      Content="Hide from screen capture"
+                                      Margin="0,0,0,6"/>
+                            <TextBlock Text="Windows renders Clipboarder as black in Teams / Zoom / OBS / screenshots. Turn off to screenshot the app for a bug report."
+                                       Foreground="{StaticResource Fg3}"
+                                       FontSize="12" Margin="22,-2,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
+                    </Border>
+
+                    <!-- ============ KEYBOARD ============ -->
+                    <TextBlock Text="KEYBOARD"
+                               Foreground="{StaticResource Fg3}"
+                               FontSize="11" FontWeight="SemiBold"
+                               Margin="2,0,0,8"/>
+
+                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,16"
+                            Background="#08FFFFFF" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right"
+                                    x:Name="HotkeyBox"
+                                    Width="150" Height="34"
+                                    CornerRadius="8" BorderThickness="1"
+                                    VerticalAlignment="Center" Margin="12,0,0,0"
+                                    Cursor="Hand"
+                                    Focusable="True"
+                                    FocusVisualStyle="{x:Null}"
+                                    PreviewKeyDown="OnHotkeyKeyDown"
+                                    MouseLeftButtonDown="OnHotkeyClick">
+                                <Border.Background><SolidColorBrush Color="#14FFFFFF"/></Border.Background>
+                                <Border.BorderBrush><SolidColorBrush Color="#1AFFFFFF"/></Border.BorderBrush>
+                                <TextBlock x:Name="HotkeyText"
+                                           Foreground="{StaticResource Fg0}"
+                                           FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Open window"
+                                           Foreground="{StaticResource Fg0}"
+                                           FontSize="14"/>
+                                <TextBlock Text="Global hotkey. Click the box, press a combination. Esc cancels, Backspace resets."
+                                           Foreground="{StaticResource Fg3}"
+                                           FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DockPanel>
                     </Border>
 
                     <!-- ============ RETENTION ============ -->

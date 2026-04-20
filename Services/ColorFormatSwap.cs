@@ -44,8 +44,6 @@ public static class ColorFormatSwap
         };
     }
 
-    // ---- parse --------------------------------------------------------------
-
     // R/G/B/A stored in the 0..1 sRGB gamma-encoded space — simplest to round-trip.
     private readonly record struct Rgba(double R, double G, double B, double A);
 
@@ -161,8 +159,6 @@ public static class ColorFormatSwap
         return true;
     }
 
-    // ---- format -------------------------------------------------------------
-
     private static string FormatHex(Rgba c)
     {
         int r = (int)Math.Round(c.R * 255);
@@ -204,8 +200,6 @@ public static class ColorFormatSwap
             ? FormattableString.Invariant($"oklch({l:0.####} {chroma:0.####} {h:0.##} / {c.A:0.##})")
             : FormattableString.Invariant($"oklch({l:0.####} {chroma:0.####} {h:0.##})");
     }
-
-    // ---- math ---------------------------------------------------------------
 
     private static void HslToRgb(double h, double s, double l,
                                  out double r, out double g, out double b)
